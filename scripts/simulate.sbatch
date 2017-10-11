@@ -1,6 +1,11 @@
 #!/bin/bash
+#SBATCH --partition=shared
+#SBATCH --time=24:0:0
+#SBATCH --nodes=1
+#SBATCH --mem=16G
+#SBATCH --ntasks=1
 
-export EXP_HOME=$1
+export EXP_HOME=/home-3/mpritt4@jhu.edu/work/jacob/vis_exp_chr9
 export LD_LIBRARY_PATH=/home/langmead/.linuxbrew/lib:$LD_LIBRARY_PATH
 export MASON=/scratch0/langmead-fs1/shared/mason/bin
 export VIS_HOME=/home-3/mpritt4@jhu.edu/work/jacob/vis/src
@@ -23,11 +28,13 @@ do
 
     # Simulate reads
     cd indiv_genomes/$NAME
-    #$MASON/mason illumina -N 5000000 -n $READLEN -hn 1 -i -sq -o sim_hapA.fastq chr9_hapA.fa
-    #$MASON/mason illumina -N 5000000 -n $READLEN -hn 1 -i -sq -o sim_hapB.fastq chr9_hapB.fa
+    for HAP in A B
+    do
+        #$MASON/mason illumina -N 5000000 -n $READLEN -hn 1 -i -sq -o sim_l${READLEN}_hap${HAP}.fastq chr9_hap${HAP}.fa
 
-    $SCRIPT_HOME/add_read_info.py NA12878_hap${HAP}.1ksnp clinvar_20170801.vcf indiv_genomes/NA12878/sim_l100_hap${HAP}.fastq indiv_genomes/NA12878/sim_l100_hap${HAP}.tagged.fastq
-    $SCRIPT_HOME/intersect_bed.py ConfidentRegions_hg19.bed indiv_genomes/$NAME/sim_l100_hap${HAP}.tagged.fastq indiv_genomes/$NAME/sim_l100_hap${HAP}.conf.tagged.fastq
+        $SCRIPT_HOME/add_read_info.py $EXP_HOME/NA12878_hap${HAP}.1ksnp $EXP_HOME/clinvar_20170801.vcf $EXP_HOME/ConfidentRegions_hg19.bed $EXP_HOME/chr9_repeats.bed sim_l${READLEN}_hap${HAP}.fastq sim_l${READLEN}_hap${HAP}.tagged.fastq
+        #$SCRIPT_HOME/intersect_bed.py $EXP_HOME/ConfidentRegions_hg19.bed sim_l${READLEN}_hap${HAP}.tagged.fastq sim_l${READLEN}_hap${HAP}.conf.tagged.fastq $CHR
+    done
 
     cd $EXP_HOME
 done

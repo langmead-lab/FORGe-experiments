@@ -21,8 +21,9 @@ cd ceu
 $VIS_HOME/rank.py --method popcov --reference ../hs37d5.fa --vars ceu_snps.1ksnp --chrom $CHR --window-size 35 --phasing ceu_haplotypes.txt
 mv ordered.txt ordered_popcov.txt
 
-#$VIS_HOME/rank.py --method popcov-blowup --reference ../hs37d5.fa --vars ceu_snps.1ksnp --chrom $CHR --window-size 35 --phasing ceu_haplotypes.txt
-#mv ordered.txt ordered_popcov_blowup.txt
+$VIS_HOME/rank.py --method popcov-blowup --reference ../hs37d5.fa --vars ceu_snps.1ksnp --chrom $CHR --window-size 35 --phasing ceu_haplotypes.txt
+mv ordered.txt ordered_popcov_blowup.txt
 
 $VIS_HOME/rank.py --method amb --reference ../hs37d5.fa --vars ceu_snps.1ksnp --chrom $CHR --window-size 35 --phasing ceu_haplotypes.txt
 mv ordered.txt ordered_amb.txt
+mv ordered.txt.blowup ordered_amb_blowup.txt

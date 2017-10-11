@@ -7,11 +7,55 @@ cd $EXP_HOME
 mkdir -p hisat_snps
 mkdir -p hisat_indexes
 
-#export MODE=popcov
-#sbatch $SCRIPT_HOME/build_ceu.sbatch --export=MODE
+mkdir -p aligned/$NAME
 
-#export MODE=popcov_blowup
-#sbatch $SCRIPT_HOME/build_ceu.sbatch --export=MODE
+export LEN=100
+export NAME=NA12878
+
+export MODE=popcov
+export PREFIX=accuracy_${MODE}_l${LEN}
+rm -f ${PREFIX}.tsv
+printf "Pct\tHap\tAligned\tCorrect\tOverall\n" > ${PREFIX}.tsv
+rm -f ${PREFIX}.strat_snp.tsv
+printf "Pct\tSNPs\tHap\tAligned\tCorrect\tOverall\n" > ${PREFIX}.strat_snp.tsv
+rm -f ${PREFIX}.strat_rare.tsv
+printf "Pct\tRareSNPs\tHap\tAligned\tCorrect\tOverall\n" > ${PREFIX}.strat_rare.tsv
+rm -f ${PREFIX}.strat_snp.tsv
+printf "Pct\tDelSNPs\tHap\tAligned\tCorrect\tOverall\n" > ${PREFIX}.strat_del.tsv
+sbatch $SCRIPT_HOME/build_ceu.sbatch --export=MODE,LEN,NAME,PREFIX
+
+export MODE=popcov_blowup
+export PREFIX=accuracy_${MODE}_l${LEN}
+rm -f ${PREFIX}.tsv
+printf "Pct\tHap\tAligned\tCorrect\tOverall\n" > ${PREFIX}.tsv
+rm -f ${PREFIX}.strat_snp.tsv
+printf "Pct\tSNPs\tHap\tAligned\tCorrect\tOverall\n" > ${PREFIX}.strat_snp.tsv
+rm -f ${PREFIX}.strat_rare.tsv
+printf "Pct\tRareSNPs\tHap\tAligned\tCorrect\tOverall\n" > ${PREFIX}.strat_rare.tsv
+rm -f ${PREFIX}.strat_snp.tsv
+printf "Pct\tDelSNPs\tHap\tAligned\tCorrect\tOverall\n" > ${PREFIX}.strat_del.tsv
+sbatch $SCRIPT_HOME/build_ceu.sbatch --export=MODE,LEN,NAME,PREFIX
 
 export MODE=amb
-sbatch $SCRIPT_HOME/build_ceu.sbatch --export=MODE
+export PREFIX=accuracy_${MODE}_l${LEN}
+rm -f ${PREFIX}.tsv
+printf "Pct\tHap\tAligned\tCorrect\tOverall\n" > ${PREFIX}.tsv
+rm -f ${PREFIX}.strat_snp.tsv
+printf "Pct\tSNPs\tHap\tAligned\tCorrect\tOverall\n" > ${PREFIX}.strat_snp.tsv
+rm -f ${PREFIX}.strat_rare.tsv
+printf "Pct\tRareSNPs\tHap\tAligned\tCorrect\tOverall\n" > ${PREFIX}.strat_rare.tsv
+rm -f ${PREFIX}.strat_snp.tsv
+printf "Pct\tDelSNPs\tHap\tAligned\tCorrect\tOverall\n" > ${PREFIX}.strat_del.tsv
+sbatch $SCRIPT_HOME/build_ceu.sbatch --export=MODE,LEN,NAME,PREFIX
+
+export MODE=amb_blowup
+export PREFIX=accuracy_${MODE}_l${LEN}
+rm -f ${PREFIX}.tsv
+printf "Pct\tHap\tAligned\tCorrect\tOverall\n" > ${PREFIX}.tsv
+rm -f ${PREFIX}.strat_snp.tsv
+printf "Pct\tSNPs\tHap\tAligned\tCorrect\tOverall\n" > ${PREFIX}.strat_snp.tsv
+rm -f ${PREFIX}.strat_rare.tsv
+printf "Pct\tRareSNPs\tHap\tAligned\tCorrect\tOverall\n" > ${PREFIX}.strat_rare.tsv
+rm -f ${PREFIX}.strat_snp.tsv
+printf "Pct\tDelSNPs\tHap\tAligned\tCorrect\tOverall\n" > ${PREFIX}.strat_del.tsv
+sbatch $SCRIPT_HOME/build_ceu.sbatch --export=MODE,LEN,NAME,PREFIX

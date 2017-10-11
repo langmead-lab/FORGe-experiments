@@ -16,7 +16,7 @@ do
     # Manually cat 1ksnp files because it's easier than writing a script
 
 
-    for NCHROM in 1 6 12 17 23
+    for NCHROM in 12
     do
         cd chroms${NCHROM}
         export NCHROM=$NCHROM
