@@ -35,4 +35,5 @@ while thread.isAlive():
     mem = resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss
     if mem > max_mem:
         max_mem = mem
+    #sleep()
 

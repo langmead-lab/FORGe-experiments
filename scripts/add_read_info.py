@@ -4,7 +4,7 @@ import sys
 import bisect
 
 '''
-Usage: ./add_read_info.py snps.1ksnp del_variants.vcf confident_regions.bed repeat_regins.bed reads.fastq output.fastq
+Usage: ./add_read_info.py snps.1ksnp del_variants.vcf confident_regions.bed repeat_regions.bed mappability_excludable.bed reads.fastq output.fastq
 1ksnp file should be sorted by chromsome and position
 '''
 
@@ -16,6 +16,15 @@ def read_bed(bed, chrom):
         for line in f:
             row = line.rstrip().split('\t')
             if row[0] == 'chr'+chrom:
+                intervals.append((int(row[1]), int(row[2])))
+    return intervals
+
+def read_alu_bed(bed, chrom):
+    intervals = []
+    with open(bed, 'r') as f:
+        for line in f:
+            row = line.rstrip().split('\t')
+            if row[0] == 'chr'+chrom and 'Alu' in row[3]:
                 intervals.append((int(row[1]), int(row[2])))
     return intervals
 
@@ -81,9 +90,12 @@ def read_del_vars(filename):
 
     return del_vars
 
-def add_read_info(in_reads, out_reads, all_vars, conf, repeats):
+def add_read_info(in_reads, out_reads, all_vars, exome, conf, repeats, alu, unmap):
+    nume = len(exome)
     numc = len(conf)
     numr = len(repeats)
+    numa = len(alu)
+    numm = len(unmap)
     with open(in_reads, 'r') as f:
         with open(out_reads, 'w') as f_out:
             line_id = 0
@@ -137,6 +149,19 @@ def add_read_info(in_reads, out_reads, all_vars, conf, repeats):
                 count_del = sum([s[2] for s in v[s_start:s_end]])
                 freqs = [str(s[1]) for s in v[s_start:s_end]]
 
+                exome_v = 0
+                exome_i = bisect.bisect_left(exome, (start,start))-1
+                while exome_i < nume and exome[exome_i][0] <= start:
+                    if exome[exome_i][1] >= end:
+                        exome_v = 2
+                        break
+                    elif exome[exome_i][1] > start:
+                        exome_v = 1
+                        break
+                    exome_i += 1
+                if not exome_v and exome_i < nume and exome[exome_i][0] < end:
+                    exome_v = 1
+
                 conf_v = 0
                 conf_i = bisect.bisect_left(conf, (start,start))-1
                 while conf_i < numc and conf[conf_i][0] <= start:
@@ -147,7 +172,7 @@ def add_read_info(in_reads, out_reads, all_vars, conf, repeats):
                         conf_v = 1
                         break
                     conf_i += 1
-                if not conf_v and conf[conf_i][0] < end:
+                if not conf_v and conf_i < numc and conf[conf_i][0] < end:
                     conf_v = 1
 
                 rep_v = 0
@@ -163,19 +188,50 @@ def add_read_info(in_reads, out_reads, all_vars, conf, repeats):
                 if not rep_v and repeats[rep_i][0] < end:
                     rep_v = 1
 
-                f_out.write(line.rstrip() + ' nsnps=' + str(count_snps) + ' del=' + str(count_del) + ' freqs=' + ','.join(freqs) + ' conf=' + str(conf_v) + ' rep='+ str(rep_v) + '\n')
+                alu_v = 0
+                alu_i = bisect.bisect_left(alu, (start,start))-1
+                while alu_i < numa and alu[alu_i][0] <= start:
+                    if alu[alu_i][1] >= end:
+                        alu_v = 2
+                        break
+                    elif alu[alu_i][1] > start:
+                        alu_v = 1
+                        break
+                    alu_i += 1
+                if not alu_v and alu_i < numa and alu[alu_i][0] < end:
+                    alu_v = 1
+
+                map_v = 0
+                map_i = bisect.bisect_left(unmap, (start,start))-1
+                while map_i < numm and unmap[map_i][0] <= start:
+                    if unmap[map_i][1] >= end:
+                        map_v = 2
+                        break
+                    elif unmap[map_i][1] > start:
+                        map_v = 1
+                        break
+                    map_i += 1
+                if not map_v and map_i < numm and unmap[map_i][0] < end:
+                    map_v = 1
+
+                f_out.write(line.rstrip() + ' nsnps=' + str(count_snps) + ' del=' + str(count_del) + ' freqs=' + ','.join(freqs) + ' exome=' + str(exome_v) + ' conf=' + str(conf_v) + ' rep='+ str(rep_v) + ' alu=' + str(alu_v) + ' unmap=' + str(map_v) + '\n')
 
 if __name__ == '__main__':
     snps_file = sys.argv[1]
     del_var_file = sys.argv[2]
-    conf_regions = sys.argv[3]
-    repeat_regions = sys.argv[4]
-    in_reads = sys.argv[5]
-    out_reads = sys.argv[6]
+    exome_regions = sys.argv[3]
+    conf_regions = sys.argv[4]
+    repeat_regions = sys.argv[5]
+    mappable_exclude = sys.argv[6]
+    in_reads = sys.argv[7]
+    out_reads = sys.argv[8]
 
     del_vars = read_del_vars(del_var_file)
     all_snps = read_snps(snps_file, del_vars)
+    exome = read_bed(exome_regions, '9')
     conf = read_bed(conf_regions, '9')
     repeats = read_bed(repeat_regions, '9')
+    alu = read_alu_bed(repeat_regions, '9')
+    unmap = read_bed(mappable_exclude, '9')
 
-    add_read_info(in_reads, out_reads, all_snps, conf, repeats)
+    add_read_info(in_reads, out_reads, all_snps, exome, conf, repeats, alu, unmap)
