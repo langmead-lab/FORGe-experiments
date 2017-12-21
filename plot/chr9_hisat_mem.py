@@ -20,6 +20,9 @@ PLOT_POP_COV_PC = False
 PLOT_AMB_PC = False
 PLOT_VARGAS = False
 
+MEM_MODE = 'AlignMem'
+MEM_LABEL = 'Align Mem (MB)'
+
 def val(row, label, header):
     if label in header:
         return row[header[label]]
@@ -45,8 +48,10 @@ def read_tsv(filename):
             overall = float(val(row, 'Overall', header))
 
             mem = 0
-            if 'BuildMem' in header:
-                mem = float(val(row, 'BuildMem', header)) / 1000 # Convert to GB
+            if MEM_MODE in header:
+                mem = float(val(row, MEM_MODE, header))
+                if MEM_MODE == 'BuildMem':
+                    mem /= 1000 # Convert to GB
 
             if pct in results:
                 prev = results[pct]
@@ -75,10 +80,14 @@ def read_mem(filename):
             row = line.rstrip().split('\t')
             pct = val(row, 'Pct', header)
             num = int(val(row, 'Num', header))
-            build_mem = float(val(row, 'BuildMem', header)) / 1000 # Convert to GB
-            align_mem = float(val(row, 'AlignMem', header))
+            #build_mem = float(val(row, 'BuildMem', header)) / 1000 # Convert to GB
+            #align_mem = float(val(row, 'AlignMem', header))
 
-            results[pct] = build_mem
+            if MEM_MODE == 'BuildMem':
+                mem = float(val(row, MEM_MODE, header)) / 1000
+            else:
+                mem = float(val(row, MEM_MODE, header))
+            results[pct] = mem
     return results
 
 def findOptPoint(correct, incorrect):
@@ -115,22 +124,22 @@ aligned_auto, correct_auto, accuracy_auto, mem_auto = hisat_auto['Auto'][0], his
 incorrect_auto = aligned_auto * (100 - correct_auto) / 100
 
 if PLOT_POP_COV:
-    popcov = read_tsv('../results/chr' + chrom + '_all_popcov.tsv')
+    popcov = read_tsv('../results/chr' + chrom + '_all_popcov_l100.tsv')
     popcov_mem = read_mem('../results/chr' + chrom + '_all_popcov_mem.tsv')
     pct_pc, aligned_pc, correct_pc, accuracy_pc, incorrect_pc, mem_pc, opt_pc = results_from_dict(popcov, popcov_mem)
 
 if PLOT_POP_COV_COMBINED:
-    popcov_blowup = read_tsv('../results/chr' + chrom + '_all_popcov_blowup.tsv')
+    popcov_blowup = read_tsv('../results/chr' + chrom + '_all_popcov_blowup_l100.tsv')
     popcov_blowup_mem = read_mem('../results/chr' + chrom + '_all_popcov_blowup_mem.tsv')
     pct_pcb, aligned_pcb, correct_pcb, accuracy_pcb, incorrect_pcb, mem_pcb, opt_pcb = results_from_dict(popcov_blowup, popcov_blowup_mem)
 
 if PLOT_AMB:
-    amb = read_tsv('../results/chr' + chrom + '_all_amb.tsv')
+    amb = read_tsv('../results/chr' + chrom + '_all_amb_l100.tsv')
     amb_mem = read_mem('../results/chr' + chrom + '_all_amb_mem.tsv')
     pct_amb, aligned_amb, correct_amb, accuracy_amb, incorrect_amb, mem_amb, opt_amb = results_from_dict(amb, amb_mem)
 
 if PLOT_AMB_COMBINED:
-    amb_blowup = read_tsv('../results/chr' + chrom + '_all_amb_blowup.tsv')
+    amb_blowup = read_tsv('../results/chr' + chrom + '_all_amb_blowup_l100.tsv')
     amb_blowup_mem = read_mem('../results/chr' + chrom + '_all_amb_blowup_mem.tsv')
     pct_amb_combined, aligned_amb_combined, correct_amb_combined, accuracy_amb_combined, incorrect_amb_combined, mem_amb_combined, opt_amb_combined = results_from_dict(amb_blowup, amb_blowup_mem)
 
@@ -138,85 +147,71 @@ if PLOT_AMB_COMBINED:
 
 width = 3
 
-plt.figure(figsize=(10,10))
-if PLOT_POP_COV:
-    plt.plot(pct_pc, mem_pc, color='blue', label='Pop Cov', linewidth=width)
-if PLOT_AMB:
-    plt.plot(pct_amb, mem_amb, color='red', label='Hybrid', linewidth=width)
-if PLOT_POP_COV_COMBINED:
-    plt.plot(pct_pcb, mem_pcb, color='blue', linestyle='--', label='Pop Cov + Blowup', linewidth=width)
-if PLOT_AMB_COMBINED:
-    plt.plot(pct_amb_combined, mem_amb_combined, color='red', linestyle='--', label='Hybrid + Blowup', linewidth=width)
-plt.plot([0,100], [mem_auto, mem_auto], color='black', label='HISAT2 Auto-Prune', linewidth=2)
-
-plt.legend(bbox_to_anchor=(1,1), loc='upper left')
-plt.xlabel('% SNPs')
-plt.ylabel('Alignment Mem (GB)')
-plt.savefig('chr' + chrom + '_hisat_vs_mem.png', bbox_inches='tight')
-plt.clf()
-exit()
-
 f, axs = plt.subplots(2, 2, figsize=(20,20))
 if PLOT_POP_COV:
-    axs[0,0].plot(mem_pc, aligned_pc, color='blue', label='Pop Cov', linewidth=2)
+    axs[0,0].plot(mem_pc, aligned_pc, color='blue', label='Pop Cov', linewidth=width)
     axs[0,0].plot(mem_pc[opt_pc], aligned_pc[opt_pc], color='blue', marker='D', ms=10)
 if PLOT_AMB:
-    axs[0,0].plot(mem_amb, aligned_amb, color='red', label='Hybrid', linewidth=2)
+    axs[0,0].plot(mem_amb, aligned_amb, color='red', label='Hybrid', linewidth=width)
     axs[0,0].plot(mem_amb[opt_amb], aligned_amb[opt_amb], color='red', marker='D', ms=10)
 if PLOT_POP_COV_COMBINED:
-    axs[0,0].plot(mem_pcb, aligned_pcb, color='blue', linestyle='--', label='Combined (Pop Cov + Blowup)', linewidth=2)
+    axs[0,0].plot(mem_pcb, aligned_pcb, color='blue', linestyle='--', label='Combined (Pop Cov + Blowup)', linewidth=width)
     axs[0,0].plot(mem_pcb[opt_pcb], aligned_pcb[opt_pcb], color='blue', marker='D', ms=10)
 if PLOT_AMB_COMBINED:
-    axs[0,0].plot(mem_amb_combined, aligned_amb_combined, color='red', linestyle='--', label='Combined (Hybrid + Blowup)', linewidth=2)
+    axs[0,0].plot(mem_amb_combined, aligned_amb_combined, color='red', linestyle='--', label='Combined (Hybrid + Blowup)', linewidth=width)
     axs[0,0].plot(mem_amb_combined[opt_amb_combined], aligned_amb_combined[opt_amb_combined], color='red', marker='D', ms=10)
 axs[0,0].plot(mem_auto, aligned_auto, color='black', marker='D', ms=10)
-axs[0,0].set_xlabel('Alignment Mem (GB)')
+axs[0,0].set_xlabel(MEM_LABEL)
 axs[0,0].set_ylabel('% Reads Aligned')
 
 if PLOT_POP_COV:
-    axs[0,1].plot(mem_pc, correct_pc, color='blue', label='Pop Cov', linewidth=2)
+    axs[0,1].plot(mem_pc, correct_pc, color='blue', label='Pop Cov', linewidth=width)
     axs[0,1].plot(mem_pc[opt_pc], correct_pc[opt_pc], color='blue', marker='D', ms=10)
 if PLOT_AMB:
-    axs[0,1].plot(mem_amb, correct_amb, color='red', label='Hybrid', linewidth=2)
+    axs[0,1].plot(mem_amb, correct_amb, color='red', label='Hybrid', linewidth=width)
     axs[0,1].plot(mem_amb[opt_amb], correct_amb[opt_amb], color='red', marker='D', ms=10)
 if PLOT_POP_COV_COMBINED:
-    axs[0,1].plot(mem_pcb, correct_pcb, color='blue', linestyle='--', label='Combined (Pop Cov + Blowup)', linewidth=2)
+    axs[0,1].plot(mem_pcb, correct_pcb, color='blue', linestyle='--', label='Combined (Pop Cov + Blowup)', linewidth=width)
     axs[0,1].plot(mem_pcb[opt_pcb], correct_pcb[opt_pcb], color='blue', marker='D', ms=10)
 if PLOT_AMB_COMBINED:
-    axs[0,1].plot(mem_amb_combined, correct_amb_combined, color='red', linestyle='--', label='Combined (Hybrid + Blowup)', linewidth=2)
+    axs[0,1].plot(mem_amb_combined, correct_amb_combined, color='red', linestyle='--', label='Combined (Hybrid + Blowup)', linewidth=width)
     axs[0,1].plot(mem_amb_combined[opt_amb_combined], correct_amb_combined[opt_amb_combined], color='red', marker='D', ms=10)
 axs[0,1].plot(mem_auto, correct_auto, color='black', marker='D', ms=10)
-axs[0,1].set_xlabel('Alignment Mem (GB)')
+axs[0,1].set_xlabel(MEM_LABEL)
 axs[0,1].set_ylabel('% Correct of Aligned')
 
 if PLOT_POP_COV:
-    axs[1,0].plot(mem_pc, accuracy_pc, color='blue', label='Pop Cov', linewidth=2)
+    axs[1,0].plot(mem_pc, accuracy_pc, color='blue', label='Pop Cov', linewidth=width)
     axs[1,0].plot(mem_pc[opt_pc], accuracy_pc[opt_pc], color='blue', marker='D', ms=10)
 if PLOT_AMB:
-    axs[1,0].plot(mem_amb, accuracy_amb, color='red', label='Hybrid', linewidth=2)
+    axs[1,0].plot(mem_amb, accuracy_amb, color='red', label='Hybrid', linewidth=width)
     axs[1,0].plot(mem_amb[opt_amb], accuracy_amb[opt_amb], color='red', marker='D', ms=10)
 if PLOT_POP_COV_COMBINED:
-    axs[1,0].plot(mem_pcb, accuracy_pcb, color='blue', linestyle='--', label='Combined (Pop Cov + Blowup)', linewidth=2)
+    axs[1,0].plot(mem_pcb, accuracy_pcb, color='blue', linestyle='--', label='Combined (Pop Cov + Blowup)', linewidth=width)
     axs[1,0].plot(mem_pcb[opt_pcb], accuracy_pcb[opt_pcb], color='blue', marker='D', ms=10)
 if PLOT_AMB_COMBINED:
-    axs[1,0].plot(mem_amb_combined, accuracy_amb_combined, color='red', linestyle='--', label='Combined (Hybrid + Blowup)', linewidth=2)
+    axs[1,0].plot(mem_amb_combined, accuracy_amb_combined, color='red', linestyle='--', label='Combined (Hybrid + Blowup)', linewidth=width)
     axs[1,0].plot(mem_amb_combined[opt_amb_combined], accuracy_amb_combined[opt_amb_combined], color='red', marker='D', ms=10)
 axs[1,0].plot(mem_auto, accuracy_auto, color='black', marker='D', ms=10)
-axs[1,0].set_xlabel('Alignment Mem (GB)')
+axs[1,0].set_xlabel(MEM_LABEL)
 axs[1,0].set_ylabel('% Correct Overall')
 
 if PLOT_POP_COV:
-    axs[1,1].plot(pct_pc, mem_pc, color='blue', label='Pop Cov', linewidth=2)
+    axs[1,1].plot(pct_pc, mem_pc, color='blue', label='Pop Cov', linewidth=width)
+    axs[1,1].plot(pct_pc[opt_pc], mem_pc[opt_pc], color='blue', marker='D', ms=10)
 if PLOT_AMB:
-    axs[1,1].plot(pct_amb, mem_amb, color='red', label='Hybrid', linewidth=2)
+    axs[1,1].plot(pct_amb, mem_amb, color='red', label='Hybrid', linewidth=width)
+    axs[1,1].plot(pct_amb[opt_amb], mem_amb[opt_amb], color='red', marker='D', ms=10)
 if PLOT_POP_COV_COMBINED:
-    axs[1,1].plot(pct_pcb, mem_pcb, color='blue', linestyle='--', label='Pop Cov + Blowup', linewidth=2)
+    axs[1,1].plot(pct_pcb, mem_pcb, color='blue', linestyle='--', label='Pop Cov + Blowup', linewidth=width)
+    axs[1,1].plot(pct_pcb[opt_pcb], mem_pcb[opt_pcb], color='blue', marker='D', ms=10)
 if PLOT_AMB_COMBINED:
-    axs[1,1].plot(pct_amb_combined, mem_amb_combined, color='red', linestyle='--', label='Hybrid + Blowup (0.5)', linewidth=2)
-axs[1,1].plot([0,100], [mem_auto, mem_auto], color='black', label='HISAT2 Auto Prune', linewidth=1.5)
+    axs[1,1].plot(pct_amb_combined, mem_amb_combined, color='red', linestyle='--', label='Hybrid + Blowup', linewidth=width)
+    axs[1,1].plot(pct_amb_combined[opt_amb_combined], mem_amb_combined[opt_amb_combined], color='red', marker='D', ms=10)
+axs[1,1].plot([0,100], [mem_auto, mem_auto], color='black', label='HISAT2 Auto Prune', linewidth=width)
 
 plt.legend(bbox_to_anchor=(-1,-0.1), loc='upper left')
 axs[1,1].set_xlabel('% SNPs')
-axs[1,1].set_ylabel('Alignment Mem (GB)')
+axs[1,1].set_ylabel(MEM_LABEL)
 plt.savefig('chr' + chrom + '_hisat_vs_mem.png', bbox_inches='tight')
 plt.clf()

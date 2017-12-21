@@ -6,28 +6,17 @@ Plot chromosome-specific accuracy results
 
 import matplotlib.pyplot as plt
 import sys
+import math
 
-#####
-STRAT_MODE = int(sys.argv[1])
+STRAT_PREFIX = 'strat_snp'
+STRAT_LABEL = 'SNPs'
+STRAT_DESC = 'SNPs'
+MAX_STRAT = 3
+COLORS = ['blue', 'green', 'red', 'cyan']
 
-if STRAT_MODE == 0:
-    STRAT_PREFIX = 'strat_snp'
-    STRAT_LABEL = 'SNPs'
-    STRAT_DESC = 'SNPs'
-    MAX_STRAT = 3
-elif STRAT_MODE == 1:
-    STRAT_PREFIX = 'strat_del'
-    STRAT_LABEL = 'DelSNPs'
-    STRAT_DESC = 'Deleterious SNPs'
-    MAX_STRAT = 1
-elif STRAT_MODE == 2:
-    STRAT_PREFIX = 'strat_rare'
-    STRAT_LABEL = 'RareSNPs'
-    STRAT_DESC = 'Rare SNPs'
-    MAX_STRAT = 1
 ######
-RANK_MODE = int(sys.argv[2])
 
+RANK_MODE = int(sys.argv[1])
 if RANK_MODE == 0:
     RANK_NAME = 'popcov'
     RANK_DESC = 'Population Coverage'
@@ -123,9 +112,9 @@ def results_from_dict(results):
     opt = []
 
     for i in range(MAX_STRAT+1):
-        aligned.append([results[p][i][0] for p in pct])
-        correct.append([results[p][i][1] for p in pct])
-        overall.append([results[p][i][2] for p in pct])
+        aligned.append([100*results[p][i][0] for p in pct])
+        correct.append([100*results[p][i][1] for p in pct])
+        overall.append([100*results[p][i][2] for p in pct])
         incorrect.append([aligned[i][p] * (100-correct[i][p]) / 100 for p in range(len(pct))])
         opt.append(findOptPoint(correct[i], incorrect[i]))
 
@@ -134,8 +123,7 @@ def results_from_dict(results):
 
 #########################
 
-results = read_tsv('../results/chr' + chrom + '_all_' + RANK_NAME + '.' + STRAT_PREFIX + '.tsv')
-#results = read_tsv('../results/accuracy_' + RANK_NAME + '_hg19conf.' + STRAT_PREFIX + '.tsv')
+results = read_tsv('../results/chr9_all_'+RANK_NAME+'_safe.'+STRAT_PREFIX+'.tsv')
 pct, aligned, correct, accuracy, incorrect, opt = results_from_dict(results)
 
 
@@ -145,41 +133,50 @@ width = 3
 
 plt.figure(figsize=(10,10))
 
-for i in range(MAX_STRAT+1):
-    plt.plot(pct, accuracy[i], label=str(i)+' '+STRAT_DESC, linewidth=width)
-plt.xlabel('% SNPs')
-plt.ylabel('% Correct Overall')
-plt.legend(loc=4)
-plt.ylim([0.9,0.98])
-plt.savefig('chr' + chrom + '_hisat_' + RANK_NAME + '_accuracy.'+STRAT_PREFIX+'.png', bbox_inches='tight')
-plt.clf()
-exit()
+xlim = [0.2, 1.8]
+ylim = [70, 100]
 
 f, axs = plt.subplots(2, 2, figsize=(20,20))
 for i in range(MAX_STRAT+1):
-    axs[0,0].plot(pct, aligned[i], label=str(i)+' '+STRAT_DESC, linewidth=width)
+    lab = str(i)+' '+STRAT_DESC
+    axs[0,0].plot(pct, aligned[i], label=lab, linewidth=width, color=COLORS[i])
+    axs[0,0].plot(pct[opt[i]], aligned[i][opt[i]], color=COLORS[i], marker='D', ms=10)
 axs[0,0].set_xlabel('% SNPs')
 axs[0,0].set_ylabel('% Reads Aligned')
 
 for i in range(MAX_STRAT+1):
-    axs[0,1].plot(pct, correct[i], label=str(i)+' '+STRAT_DESC, linewidth=width)
+    lab = str(i)+' '+STRAT_DESC
+    axs[0,1].plot(pct, correct[i], label=lab, linewidth=width, color=COLORS[i])
+    axs[0,1].plot(pct[opt[i]], correct[i][opt[i]], color=COLORS[i], marker='D', ms=10)
 axs[0,1].set_xlabel('% SNPs')
 axs[0,1].set_ylabel('% Correct of Aligned')
 
 for i in range(MAX_STRAT+1):
-    axs[1,0].plot(pct, accuracy[i], label=str(i)+' '+STRAT_DESC, linewidth=width)
+    lab = str(i)+' '+STRAT_DESC
+    axs[1,0].plot(pct, accuracy[i], label=lab, linewidth=width, color=COLORS[i])
+    axs[1,0].plot(pct[opt[i]], accuracy[i][opt[i]], color=COLORS[i], marker='D', ms=10)
 axs[1,0].set_xlabel('% SNPs')
 axs[1,0].set_ylabel('% Correct Overall')
 
 for i in range(MAX_STRAT+1):
-    axs[1,1].plot(incorrect[i], correct[i], label=str(i)+' '+STRAT_DESC, linewidth=width)
+    lab = str(i)+' '+STRAT_DESC
+    axs[1,1].plot(incorrect[i], accuracy[i], color=COLORS[i], label=lab, linewidth=width)
+    #axs[1,1].plot(incorrect[i][opt[i]], accuracy[i][opt[i]], color=COLORS[i], marker='D', ms=10)
+
+    dy = (accuracy[i][-1] - accuracy[i][-2]) / (ylim[1]-ylim[0])
+    dx = (incorrect[i][-1] - incorrect[i][-2]) / (xlim[1]-xlim[0])
+    axs[1,1].plot(incorrect[i][-1], accuracy[i][-1], color=COLORS[i], marker=(3, 1, -90+math.degrees(math.atan2(dy,dx))), ms=18)
+
+    dy = (accuracy[i][1] - accuracy[i][0]) / (ylim[1]-ylim[0])
+    dx = (incorrect[i][1] - incorrect[i][0]) / (xlim[1]-xlim[0])
+    axs[1,1].plot(incorrect[i][0], accuracy[i][0], color=COLORS[i], marker='o', ms=12)
 
 #plt.legend(bbox_to_anchor=(-1,-0.1), loc='upper left')
 plt.legend(bbox_to_anchor=(1,2), loc='upper left')
 #plt.suptitle('Reads Stratified by ' + STRAT_LABEL + ', SNPs Ranked by ' + RANK_DESC, fontsize=24)
 axs[1,1].set_xlabel('Incorrect')
 axs[1,1].set_ylabel('Correct')
-plt.savefig('chr' + chrom + '_hisat_' + RANK_NAME + '.'+STRAT_PREFIX+'.png', bbox_inches='tight')
+plt.savefig('strat_snp_' + RANK_NAME + '.png', bbox_inches='tight')
 plt.clf()
 
 

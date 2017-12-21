@@ -87,28 +87,19 @@ total_all = 3415974
 total_ceu = 545317
 
 if PLOT_POP_COV:
-    popcov = read_tsv('../results/chr' + chrom + '_all_popcov.tsv')
+    popcov = read_tsv('../results/chr' + chrom + '_all_popcov_l100.tsv')
     pct_pc, aligned_pc, correct_pc, accuracy_pc, incorrect_pc, mem_pc, count_pc, opt_pc = results_from_dict(popcov, total_all)
 
-    #popcov_ceu = read_tsv('../results/chr' + chrom + '_ceu_popcov.tsv')
-    popcov_ceu = read_tsv('../results/chr' + chrom + '_ceu_popcov.tsv')
+    popcov_ceu = read_tsv('../results/chr' + chrom + '_ceu_popcov_l100.tsv')
     pct_pc_ceu, aligned_pc_ceu, correct_pc_ceu, accuracy_pc_ceu, incorrect_pc_ceu, mem_pc_ceu, count_pc_ceu, opt_pc_ceu = results_from_dict(popcov_ceu, total_ceu)
 
 if PLOT_AMB:
-    amb = read_tsv('../results/chr' + chrom + '_all_amb.tsv')
+    amb = read_tsv('../results/chr' + chrom + '_all_amb_l100.tsv')
     pct_amb, aligned_amb, correct_amb, accuracy_amb, incorrect_amb, mem_amb, count_amb, opt_amb = results_from_dict(amb, total_all)
 
-    #amb_ceu = read_tsv('../results/chr' + chrom + '_ceu_amb.tsv')
-    amb_ceu = read_tsv('../results/chr' + chrom + '_ceu_amb.tsv')
+    amb_ceu = read_tsv('../results/chr' + chrom + '_ceu_amb_l100.tsv')
     pct_amb_ceu, aligned_amb_ceu, correct_amb_ceu, accuracy_amb_ceu, incorrect_amb_ceu, mem_amb_ceu, count_amb_ceu, opt_amb_ceu = results_from_dict(amb_ceu, total_ceu)
 
-#if PLOT_POP_COV_COMBINED:
-#    popcov_blowup = read_tsv('../results/chr' + chrom + '_all_popcov_blowup.tsv')
-#    pct_pcb, aligned_pcb, correct_pcb, accuracy_pcb, incorrect_pcb, mem_pcb, count_pcb, opt_pcb = results_from_dict(popcov_blowup, total_all)
-#
-#    #popcov_blowup_ceu = read_tsv('../results/chr' + chrom + '_ceu_popcov_blowup.tsv')
-#    popcov_blowup_ceu = read_tsv('../results/accuracy_popcov_blowup_l100.tsv')
-#    pct_pcb_ceu, aligned_pcb_ceu, correct_pcb_ceu, accuracy_pcb_ceu, incorrect_pcb_ceu, mem_pcb_ceu, count_pcb_ceu, opt_pcb_ceu = results_from_dict(popcov_blowup_ceu, total_ceu)
 
 
 #########################
@@ -117,6 +108,7 @@ width = 3
 
 plt.figure(figsize=(10,10))
 
+'''
 if PLOT_POP_COV:
     plt.plot(count_pc, accuracy_pc, color='blue', label='All, Pop Cov', linewidth=width)
     plt.plot(count_pc[opt_pc], accuracy_pc[opt_pc], color='blue', marker='D', ms=10)
@@ -144,6 +136,7 @@ plt.legend(loc=4)
 plt.savefig('all_vs_ceu_accuracy.png', bbox_inches='tight')
 plt.clf()
 exit()
+'''
 
 f, axs = plt.subplots(2, 2, figsize=(20,20))
 if PLOT_POP_COV:
