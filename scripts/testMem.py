@@ -1,5 +1,7 @@
 #! /usr/bin/env python2.7
 
+# Executes a given command and prints the peak memory usage after completion
+
 import resource
 import subprocess
 import threading

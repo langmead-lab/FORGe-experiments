@@ -19,15 +19,12 @@ for NAME in NA12878
 do
     # Generate individual genomes
     mkdir -p indiv_genomes/$NAME
-    #$VIS_HOME/update_genome.py --ref hs37d5.fa --vcf ALL.chr${CHR}.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf --chrom $CHR --out-prefix indiv_genomes/$NAME/chr$CHR --name $NAME
+    $VIS_HOME/update_genome.py --ref hs37d5.fa --vcf ALL.chr${CHR}.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf --chrom $CHR --out-prefix indiv_genomes/$NAME/chr$CHR --name $NAME
 
     # Simulate reads
     cd indiv_genomes/$NAME
-    #$MASON/mason illumina -N 5000000 -n $READLEN -hn 1 -i -sq -o sim_hapA.fastq chr9_hapA.fa
-    #$MASON/mason illumina -N 5000000 -n $READLEN -hn 1 -i -sq -o sim_hapB.fastq chr9_hapB.fa
-
-    $SCRIPT_HOME/add_read_info.py NA12878_hap${HAP}.1ksnp clinvar_20170801.vcf indiv_genomes/NA12878/sim_l100_hap${HAP}.fastq indiv_genomes/NA12878/sim_l100_hap${HAP}.tagged.fastq
-    $SCRIPT_HOME/intersect_bed.py ConfidentRegions_hg19.bed indiv_genomes/$NAME/sim_l100_hap${HAP}.tagged.fastq indiv_genomes/$NAME/sim_l100_hap${HAP}.conf.tagged.fastq
+    $MASON/mason illumina -N 5000000 -n $READLEN -hn 1 -i -sq -o sim_hapA.fastq chr9_hapA.fa
+    $MASON/mason illumina -N 5000000 -n $READLEN -hn 1 -i -sq -o sim_hapB.fastq chr9_hapB.fa
 
     cd $EXP_HOME
 done
