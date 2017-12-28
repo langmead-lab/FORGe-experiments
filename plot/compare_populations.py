@@ -90,14 +90,14 @@ if PLOT_POP_COV:
     popcov = read_tsv('../results/chr' + chrom + '_all_popcov_l100.tsv')
     pct_pc, aligned_pc, correct_pc, accuracy_pc, incorrect_pc, mem_pc, count_pc, opt_pc = results_from_dict(popcov, total_all)
 
-    popcov_ceu = read_tsv('../results/chr' + chrom + '_ceu_popcov_l100.tsv')
+    popcov_ceu = read_tsv('../results/ceu/chr' + chrom + '_ceu_popcov_l100.tsv')
     pct_pc_ceu, aligned_pc_ceu, correct_pc_ceu, accuracy_pc_ceu, incorrect_pc_ceu, mem_pc_ceu, count_pc_ceu, opt_pc_ceu = results_from_dict(popcov_ceu, total_ceu)
 
 if PLOT_AMB:
     amb = read_tsv('../results/chr' + chrom + '_all_amb_l100.tsv')
     pct_amb, aligned_amb, correct_amb, accuracy_amb, incorrect_amb, mem_amb, count_amb, opt_amb = results_from_dict(amb, total_all)
 
-    amb_ceu = read_tsv('../results/chr' + chrom + '_ceu_amb_l100.tsv')
+    amb_ceu = read_tsv('../results/ceu/chr' + chrom + '_ceu_amb35_l100.tsv')
     pct_amb_ceu, aligned_amb_ceu, correct_amb_ceu, accuracy_amb_ceu, incorrect_amb_ceu, mem_amb_ceu, count_amb_ceu, opt_amb_ceu = results_from_dict(amb_ceu, total_ceu)
 
 
