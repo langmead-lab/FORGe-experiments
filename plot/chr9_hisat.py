@@ -217,4 +217,8 @@ axs[1,1].set_ylabel('% Correct')
 plt.savefig('chr' + chrom + '_hisat.png', bbox_inches='tight')
 plt.clf()
 
-
+# Print optimum SNP percentages
+print(pct_pc[opt_pc])
+print(pct_pcb[opt_pcb])
+print(pct_amb[opt_amb])
+print(pct_amb_combined[opt_amb_combined])

@@ -178,6 +178,12 @@ axs[1,0].set_xlabel('% SNPs')
 axs[1,0].set_ylabel('% Correct Overall')
 axs[1,0].get_yaxis().get_major_formatter().set_useOffset(False)
 
+# Print optimum SNP percentages
+#print(pct_pc[opt_pc])
+#print(pct_pcb[opt_pcb])
+#print(pct_amb[opt_amb])
+#print(pct_amb_combined[opt_amb_combined])
+
 xlim = [15.4, 16.6]
 ylim = [77.4, 78.4]
 if PLOT_POP_COV:
