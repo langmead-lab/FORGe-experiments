@@ -26,8 +26,8 @@ export NAME=NA12878
 export INDEX=hisat_indexes/${MODE}${PCT}
 for HAP in A B
 do
-    export FASTQ=../indiv_genomes/$NAME/sim_l${LEN}_hap${HAP}.conf.tagged.fastq
-    export SAM=aligned/$NAME/${MODE}${PCT}_hap${HAP}_l${LEN}.sam
+    export FASTQ=../indiv_genomes/$NAME/sim_l${LEN}_hap${HAP}.tagged.fastq
+    export SAM=aligned/${MODE}${PCT}_hap${HAP}_l${LEN}.sam
     export DESC=$HAP
     $SCRIPT_HOME/align.sh
 done
