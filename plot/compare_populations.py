@@ -97,7 +97,7 @@ if PLOT_AMB:
     amb = read_tsv('../results/chr' + chrom + '_all_amb_l100.tsv')
     pct_amb, aligned_amb, correct_amb, accuracy_amb, incorrect_amb, mem_amb, count_amb, opt_amb = results_from_dict(amb, total_all)
 
-    amb_ceu = read_tsv('../results/ceu/chr' + chrom + '_ceu_amb35_l100.tsv')
+    amb_ceu = read_tsv('../results/ceu/chr' + chrom + '_ceu_amb100_l100.tsv')
     pct_amb_ceu, aligned_amb_ceu, correct_amb_ceu, accuracy_amb_ceu, incorrect_amb_ceu, mem_amb_ceu, count_amb_ceu, opt_amb_ceu = results_from_dict(amb_ceu, total_ceu)
 
 

@@ -104,24 +104,6 @@ if PLOT_AMB_COMBINED:
 
 #########################
 
-'''
-if PLOT_POP_COV:
-    plt.plot(pct_pc, accuracy_pc, color='blue', label='Pop Cov', linewidth=2)
-    #plt.plot(pct_pc[opt_pc], accuracy_pc[opt_pc], color='blue', marker='D', ms=10)
-if PLOT_AMB:
-    plt.plot(pct_amb, accuracy_amb, color='red', label='Hybrid', linewidth=2)
-    #plt.plot(pct_amb[opt_amb], accuracy_amb[opt_amb], color='red', marker='D', ms=10)
-plt.xlabel('% SNPs')
-plt.ylabel('% Correct')
-
-plt.legend(loc=4)
-plt.xlabel('% SNPs')
-plt.ylabel('% Correct')
-plt.savefig('chr' + chrom + '_hisat_accuracy.png', bbox_inches='tight')
-plt.clf()
-exit()
-'''
-
 width = 3
 
 f, axs = plt.subplots(2, 2, figsize=(20,20))
