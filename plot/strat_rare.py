@@ -116,7 +116,7 @@ def results_from_dict(results):
         correct.append([100*results[p][i][1] for p in pct])
         overall.append([100*results[p][i][2] for p in pct])
         incorrect.append([aligned[i][p] * (100-correct[i][p]) / 100 for p in range(len(pct))])
-        opt.append(findOptPoint(correct[i], incorrect[i]))
+        opt.append(findOptPoint(overall[i], incorrect[i]))
 
     return pct, aligned, correct, overall, incorrect, opt
 

@@ -7,7 +7,7 @@ Plot chromosome-specific accuracy results
 import matplotlib.pyplot as plt
 import sys
 
-names = ['popcov', 'popcov_blowup', 'amb', 'amb_blowup']
+names = ['popcov', 'popcov_blowup', 'amb100_max15', 'amb_blowup100_max15']
 descs = ['Pop Cov', 'Pop Cov + Blowup', 'Hybrid', 'Hybrid + Blowup']
 
 strat_names = ['Total', 'Exome', 'NonConf', 'Rep', 'Alu']

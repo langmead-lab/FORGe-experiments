@@ -78,7 +78,7 @@ def results_from_dict(results):
     correct = [results[str(p)][1] for p in pct]
     overall = [results[str(p)][2] for p in pct]
     incorrect = [aligned[p] * (100-correct[p]) / 100 for p in range(len(pct))]
-    opt = findOptPoint(correct, incorrect)
+    opt = findOptPoint(overall, incorrect)
 
     return pct, aligned, correct, overall, incorrect, opt
 

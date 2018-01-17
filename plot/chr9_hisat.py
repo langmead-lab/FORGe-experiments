@@ -78,7 +78,7 @@ def results_from_dict(results):
     correct = [results[str(p)][1] for p in pct]
     overall = [results[str(p)][2] for p in pct]
     incorrect = [aligned[p] * (100-correct[p]) / 100 for p in range(len(pct))]
-    opt = findOptPoint(correct, incorrect)
+    opt = findOptPoint(overall, incorrect)
 
     return pct, aligned, correct, overall, incorrect, opt
 
@@ -94,11 +94,13 @@ if PLOT_POP_COV_COMBINED:
     pct_pcb, aligned_pcb, correct_pcb, accuracy_pcb, incorrect_pcb, opt_pcb = results_from_dict(popcov_blowup)
 
 if PLOT_AMB:
-    amb = read_tsv('../results/chr9_all_amb_l100.tsv')
+    #amb = read_tsv('../results/chr9_all_amb_l100.tsv')
+    amb = read_tsv('../results/chr9_all_amb100_max15.tsv')
     pct_amb, aligned_amb, correct_amb, accuracy_amb, incorrect_amb, opt_amb = results_from_dict(amb)
 
 if PLOT_AMB_COMBINED:
-    amb_blowup = read_tsv('../results/chr9_all_amb_blowup_l100.tsv')
+    #amb_blowup = read_tsv('../results/chr9_all_amb_blowup_l100.tsv')
+    amb_blowup = read_tsv('../results/chr9_all_amb_blowup100_max15.tsv')
     pct_amb_combined, aligned_amb_combined, correct_amb_combined, accuracy_amb_combined, incorrect_amb_combined, opt_amb_combined = results_from_dict(amb_blowup)
 
 
@@ -155,40 +157,32 @@ if PLOT_AMB_COMBINED:
 axs[1,0].set_xlabel('% SNPs')
 axs[1,0].set_ylabel('% Correct Overall')
 
-xlim = [5.36, 5.48]
-ylim = [91.1, 91.7]
-
 if PLOT_POP_COV:
     axs[1,1].plot(incorrect_pc, accuracy_pc, color='blue', label='Pop Cov', linewidth=width)
     axs[1,1].plot(incorrect_pc[opt_pc], accuracy_pc[opt_pc], color='blue', marker='D', ms=10)
-
-    dy = (accuracy_pc[-1] - accuracy_pc[-2]) / (ylim[1]-ylim[0])
-    dx = (incorrect_pc[-1] - incorrect_pc[-2]) / (xlim[1]-xlim[0])
-    axs[1,1].plot(incorrect_pc[-1], accuracy_pc[-1], color='blue', marker=(3, 1, -90+math.degrees(math.atan2(dy,dx))), ms=18)
-
-    dy = (accuracy_pc[1] - accuracy_pc[0]) / (ylim[1]-ylim[0])
-    dx = (incorrect_pc[1] - incorrect_pc[0]) / (xlim[1]-xlim[0])
-    axs[1,1].plot(incorrect_pc[0], accuracy_pc[0], color='blue', marker='o', ms=12)
-
 if PLOT_AMB:
     axs[1,1].plot(incorrect_amb, accuracy_amb, color='red', label='Hybrid', linewidth=width)
     axs[1,1].plot(incorrect_amb[opt_amb], accuracy_amb[opt_amb], color='red', marker='D', ms=10)
-
-    dy = (accuracy_amb[-1] - accuracy_amb[-2]) / (ylim[1]-ylim[0])
-    dx = (incorrect_amb[-1] - incorrect_amb[-2]) / (xlim[1]-xlim[0])
-    axs[1,1].plot(incorrect_amb[-1], accuracy_amb[-1], color='red', marker=(3, 1, -90+math.degrees(math.atan2(dy,dx))), ms=18)
-
-    dy = (accuracy_amb[1] - accuracy_amb[0]) / (ylim[1]-ylim[0])
-    dx = (incorrect_amb[1] - incorrect_amb[0]) / (xlim[1]-xlim[0])
-    axs[1,1].plot(incorrect_amb[0], accuracy_amb[0], color='red', marker='o', ms=10)
-
 if PLOT_POP_COV_COMBINED:
     axs[1,1].plot(incorrect_pcb, accuracy_pcb, color='blue', linestyle='--', label='Pop Cov + Blowup', linewidth=width)
-    axs[1,1].plot(incorrect_pcb[opt_pcb], accuracy_pcb[opt_pcb], color='blue', marker='D', ms=12)
-
+    axs[1,1].plot(incorrect_pcb[opt_pcb], accuracy_pcb[opt_pcb], color='blue', marker='D', ms=10)
 if PLOT_AMB_COMBINED:
     axs[1,1].plot(incorrect_amb_combined, accuracy_amb_combined, color='red', linestyle='--', label='Hybrid + Blowup', linewidth=width)
     axs[1,1].plot(incorrect_amb_combined[opt_amb_combined], accuracy_amb_combined[opt_amb_combined], color='red', marker='D', ms=10)
+
+# Add arrowheads
+xlim = [5.36, 5.48]
+ylim = [91.1, 91.7]
+if PLOT_POP_COV:
+    dy = (accuracy_pc[-1] - accuracy_pc[-2]) / (ylim[1]-ylim[0])
+    dx = (incorrect_pc[-1] - incorrect_pc[-2]) / (xlim[1]-xlim[0])
+    axs[1,1].plot(incorrect_pc[-1], accuracy_pc[-1], color='blue', marker=(3, 1, -90+math.degrees(math.atan2(dy,dx))), ms=18)
+    axs[1,1].plot(incorrect_pc[0], accuracy_pc[0], color='blue', marker='o', ms=12)
+if PLOT_AMB:
+    dy = (accuracy_amb[-1] - accuracy_amb[-2]) / (ylim[1]-ylim[0])
+    dx = (incorrect_amb[-1] - incorrect_amb[-2]) / (xlim[1]-xlim[0])
+    axs[1,1].plot(incorrect_amb[-1], accuracy_amb[-1], color='red', marker=(3, 1, -90+math.degrees(math.atan2(dy,dx))), ms=18)
+    axs[1,1].plot(incorrect_amb[0], accuracy_amb[0], color='red', marker='o', ms=10)
 
 #axs[1,1].plot([5.116], [78.994], marker='o', label='Outgroup SNPs')
 #axs[1,1].plot([5.354], [78.576], marker='o', label='SNPs in all outgroup')
