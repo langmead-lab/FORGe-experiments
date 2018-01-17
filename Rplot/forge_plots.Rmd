@@ -1,0 +1,114 @@
+---
+title: "forge_plots.Rmd"
+output: html_document
+---
+
+```{r libraries}
+library(ggplot2)
+library(ggrepel)
+library(plyr)
+library(dplyr)
+library(grid)
+library(gridExtra)
+library(tables)
+library(RColorBrewer)
+```
+
+```{r set_dir}
+# Depends on your system
+# setwd('~/git/vis-experiments/Rplot')
+```
+
+```{r combined_plot}
+# Borrowed from: https://rpubs.com/sjackman/grid_arrange_shared_legend
+# Thanks to Shaun Jackman
+grid_arrange_shared_legend <- function(...) {
+    plots <- list(...)
+    g <- ggplotGrob(plots[[1]] + theme(legend.position="bottom"))$grobs
+    legend <- g[[which(sapply(g, function(x) x$name) == "guide-box")]]
+    lheight <- sum(legend$height)
+    grid.arrange(
+        do.call(arrangeGrob, lapply(plots, function(x)
+            x + theme(legend.position="none"))),
+        legend,
+        ncol = 1,
+        heights = unit.c(unit(1, "npc") - lheight, lheight))
+}
+```
+
+```{r read_forge}
+read_forge <- function (fn, series, blowup) {
+  tab <- cbind(read.csv(fn, sep='\t'), list('series'=series, 'blowup'=blowup))
+  tab$incorrect <- tab$Aligned - tab$Overall
+  tab$cor_minus_incor <- tab$Overall - tab$incorrect
+  tab
+}
+```
+
+## Fig 1
+
+* Chromosome 19
+* Reads simulated from
+* Pop cov, hybrid, with blowup avoidance
+
+```{r chr19_sim}
+plot_forge <- function(m, hap='A') {
+  m <- m %>% filter(Hap == hap)
+  curve_helper <- function(m, y_column_name, y_label) {
+    m$vertical <- m[[y_column_name]]
+    mg <- m %>% dplyr::group_by(series, blowup) %>%
+      dplyr::summarise(y=vertical[which(cor_minus_incor == max(cor_minus_incor))[1]],
+                       x=Pct[which(cor_minus_incor == max(cor_minus_incor))[1]])
+    ggplot(m, aes(x=Pct, y=vertical, color=series, linetype=blowup)) +
+      geom_line() +
+      geom_point(data=mg, aes(x=x, y=y, fill=series), shape=23, color='black', size=3, alpha=0.5) +
+      labs(x='% SNPs', y=y_label) +
+      theme_bw() + theme(legend.title=element_blank())
+  }
+  parametric_helper <- function(m) {
+    mg <- m %>% dplyr::group_by(series, blowup) %>%
+      dplyr::summarise(y=Overall[which(cor_minus_incor == max(cor_minus_incor))[1]],
+                       x=incorrect[which(cor_minus_incor == max(cor_minus_incor))[1]],
+                       pct=Pct[which(cor_minus_incor == max(cor_minus_incor))[1]])
+    m <- m %>% arrange(Pct)
+    zero_pct <- data.frame(x=c(m$incorrect[1]), y=c(m$Overall[1]))
+    full_pct <- data.frame(x=c(m$incorrect[nrow(m)]), y=c(m$Overall[nrow(m)]))
+    ggplot(m) +
+      geom_path(aes(x=incorrect, y=Overall, color=series, linetype=blowup)) +
+      geom_point(data=mg, aes(x=x, y=y, fill=series),
+                 shape=23, color='black', size=3, alpha=0.5) +
+      geom_point(data=rbind(zero_pct, full_pct), aes(x=x, y=y),
+                 shape=16, fill='black', color='black', size=3) +
+      geom_text_repel(data=mg, aes(x=x, y=y, label=paste0(pct, '%')),
+                      segment.color='grey50', point.padding=0.7,
+                      min.segment.length = unit(0, 'lines')) +
+      geom_text_repel(data=zero_pct, aes(x=x, y=y, label='0%'),
+                      segment.color='grey50', point.padding=0.7,
+                      min.segment.length = unit(0, 'lines')) +
+      geom_text_repel(data=full_pct, aes(x=x, y=y, label='100%'),
+                      segment.color='grey50', point.padding=0.7,
+                      min.segment.length = unit(0, 'lines')) +
+      labs(x='% reads incorrect', y='% reads correct') +
+      theme_bw() + theme(legend.title=element_blank())
+  }
+  p_ra <- curve_helper(m, 'Aligned', '% reads aligned')
+  p_ca <- curve_helper(m, 'Correct', '% alignments correct') 
+  p_co <- curve_helper(m, 'Overall', '% reads correct') 
+  p_ci <- parametric_helper(m)
+  grid_arrange_shared_legend(p_ra, p_co, p_ca, p_ci)
+}
+```
+
+```{r}
+m <- rbind(read_forge('../results/chr9_all_popcov_l100.tsv',        'Population coverage', 'Standard'),
+           read_forge('../results/chr9_all_popcov_blowup_l100.tsv', 'Population coverage', 'Blowup avoid'),
+           read_forge('../results/chr9_all_amb_l100.tsv',           'Hybrid',              'Standard'),
+           read_forge('../results/chr9_all_amb_blowup_l100.tsv',    'Hybrid',              'Blowup avoid'))
+plot_forge(m)
+
+pdf(file='fig1.pdf', onefile=F)
+plot_forge(m)
+dev.off()
+```
+
+
