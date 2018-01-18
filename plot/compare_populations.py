@@ -165,6 +165,11 @@ axs[0,0].set_xlim([0,600])
 axs[0,0].set_xlabel('Thousands of SNPs')
 axs[0,0].set_ylabel('% Reads Aligned')
 
+print(count_pc)
+print(opt_pc)
+print(count_pc_ceu)
+print(opt_pc_ceu)
+
 if PLOT_POP_COV:
     axs[0,1].plot(count_pc, correct_pc, color='blue', label='All, Pop Cov', linewidth=width)
     axs[0,1].plot(count_pc[opt_pc], correct_pc[opt_pc], color='blue', marker='D', ms=10)

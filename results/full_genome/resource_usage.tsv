@@ -1,0 +1,21 @@
+## All Variants
+# Time usage in minutes
+Pct	FORGe	Build	Align	Total
+0	0	58
+8	79	229
+
+# Peak mem usage in GBs
+Pct	FORGe	Build	Align
+0	0		
+8			
+
+## SNPs only
+# Time usage in minutes
+Pct	FORGe	Build	Align	Total
+0	0	
+8		
+
+# Peak mem usage in GBs
+Pct	FORGe	Build	Align
+0	0		
+8			

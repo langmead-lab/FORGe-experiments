@@ -1,0 +1,7 @@
+# Chr 9
+# All populations
+# Aligned against major allele reference genome
+# Read length 100
+Pct	Hap	Aligned	Correct	Overall	AlignMem	BuildMem
+Auto	A	96.762500	94.382607	91.326970	219.5	280.7
+Auto	B	96.773010	94.395576	91.349440	219.5	280.7	
