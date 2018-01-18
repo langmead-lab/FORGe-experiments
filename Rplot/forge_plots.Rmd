@@ -10,8 +10,6 @@ library(plyr)
 library(dplyr)
 library(grid)
 library(gridExtra)
-library(tables)
-library(RColorBrewer)
 ```
 
 ```{r set_dir}
@@ -52,14 +50,17 @@ read_forge <- function (fn, series, blowup) {
 * Pop cov, hybrid, with blowup avoidance
 
 ```{r chr19_sim}
-plot_forge <- function(m, hap='A') {
+plot_forge <- function(m, x_column_name='Pct', hap='A', plot_parametric=T) {
+  m$horizontal <- m[[x_column_name]]  # trick so I can use "varticle" bareword below
+  # TODO: add the haplotypes
   m <- m %>% filter(Hap == hap)
   curve_helper <- function(m, y_column_name, y_label) {
-    m$vertical <- m[[y_column_name]]
+    m$vertical <- m[[y_column_name]]  # trick so I can use "varticle" bareword below
+    # following line construct data frame for just the optimal points
     mg <- m %>% dplyr::group_by(series, blowup) %>%
       dplyr::summarise(y=vertical[which(cor_minus_incor == max(cor_minus_incor))[1]],
-                       x=Pct[which(cor_minus_incor == max(cor_minus_incor))[1]])
-    ggplot(m, aes(x=Pct, y=vertical, color=series, linetype=blowup)) +
+                       x=horizontal[which(cor_minus_incor == max(cor_minus_incor))[1]])
+    ggplot(m, aes(x=horizontal, y=vertical, color=series, linetype=blowup)) +
       geom_line() +
       geom_point(data=mg, aes(x=x, y=y, fill=series), shape=23, color='black', size=3, alpha=0.5) +
       labs(x='% SNPs', y=y_label) +
@@ -69,41 +70,45 @@ plot_forge <- function(m, hap='A') {
     mg <- m %>% dplyr::group_by(series, blowup) %>%
       dplyr::summarise(y=Overall[which(cor_minus_incor == max(cor_minus_incor))[1]],
                        x=incorrect[which(cor_minus_incor == max(cor_minus_incor))[1]],
-                       pct=Pct[which(cor_minus_incor == max(cor_minus_incor))[1]])
-    m <- m %>% arrange(Pct)
+                       pct=horizontal[which(cor_minus_incor == max(cor_minus_incor))[1]])
+    m <- m %>% arrange(horizontal)
     zero_pct <- data.frame(x=c(m$incorrect[1]), y=c(m$Overall[1]))
     full_pct <- data.frame(x=c(m$incorrect[nrow(m)]), y=c(m$Overall[nrow(m)]))
     ggplot(m) +
       geom_path(aes(x=incorrect, y=Overall, color=series, linetype=blowup)) +
+      # optimal points
       geom_point(data=mg, aes(x=x, y=y, fill=series),
                  shape=23, color='black', size=3, alpha=0.5) +
+      # 0 and 100% points
       geom_point(data=rbind(zero_pct, full_pct), aes(x=x, y=y),
                  shape=16, fill='black', color='black', size=3) +
-      geom_text_repel(data=mg, aes(x=x, y=y, label=paste0(pct, '%')),
-                      segment.color='grey50', point.padding=0.7,
+      # labels for optimum points
+      geom_text_repel(data=mg, aes(x=x, y=y, label=paste0(pct, '%'), color=series),
+                      segment.color='black', point.padding=0.7,
                       min.segment.length = unit(0, 'lines')) +
-      geom_text_repel(data=zero_pct, aes(x=x, y=y, label='0%'),
-                      segment.color='grey50', point.padding=0.7,
-                      min.segment.length = unit(0, 'lines')) +
-      geom_text_repel(data=full_pct, aes(x=x, y=y, label='100%'),
-                      segment.color='grey50', point.padding=0.7,
-                      min.segment.length = unit(0, 'lines')) +
+      # labels for 0/100% points
+      geom_text_repel(data=zero_pct, aes(x=x, y=y, label='0%')) +
+      geom_text_repel(data=full_pct, aes(x=x, y=y, label='100%')) +
       labs(x='% reads incorrect', y='% reads correct') +
       theme_bw() + theme(legend.title=element_blank())
   }
   p_ra <- curve_helper(m, 'Aligned', '% reads aligned')
   p_ca <- curve_helper(m, 'Correct', '% alignments correct') 
-  p_co <- curve_helper(m, 'Overall', '% reads correct') 
-  p_ci <- parametric_helper(m)
-  grid_arrange_shared_legend(p_ra, p_co, p_ca, p_ci)
+  p_co <- curve_helper(m, 'Overall', '% reads correct')
+  if(plot_parametric) {
+    p_ci <- parametric_helper(m)
+  } else {
+    # TODO: make this the x = % SNPs, y = memory plot
+  }
+  grid_arrange_shared_legend(p_ra, p_ca, p_co, p_ci)
 }
 ```
 
-```{r}
-m <- rbind(read_forge('../results/chr9_all_popcov_l100.tsv',        'Population coverage', 'Standard'),
-           read_forge('../results/chr9_all_popcov_blowup_l100.tsv', 'Population coverage', 'Blowup avoid'),
-           read_forge('../results/chr9_all_amb_l100.tsv',           'Hybrid',              'Standard'),
-           read_forge('../results/chr9_all_amb_blowup_l100.tsv',    'Hybrid',              'Blowup avoid'))
+```{r fig1}
+m <- rbind(read_forge('../results/chr9_all_popcov_l100.tsv',         'Population coverage', 'Standard'),
+           read_forge('../results/chr9_all_popcov_blowup_l100.tsv',  'Population coverage', 'Blowup avoid'),
+           read_forge('../results/chr9_all_amb100_max15.tsv',        'Hybrid',              'Standard'),
+           read_forge('../results/chr9_all_amb_blowup100_max15.tsv', 'Hybrid',              'Blowup avoid'))
 plot_forge(m)
 
 pdf(file='fig1.pdf', onefile=F)
@@ -111,4 +116,37 @@ plot_forge(m)
 dev.off()
 ```
 
+```{r read_forge_join}
+read_forge_join <- function (fn1, fn2, series, blowup) {
+  tab1 <- read.csv(fn1, sep='\t')
+  tab2 <- read.csv(fn2, sep='\t', comment.char='#')
+  tab <- cbind(dplyr::inner_join(tab1, tab2, by='Pct'), list('series'=series, 'blowup'=blowup))
+  tab$incorrect <- tab$Aligned - tab$Overall
+  tab$cor_minus_incor <- tab$Overall - tab$incorrect
+  tab
+}
+```
 
+```{r fig2}
+m <- rbind(read_forge_join('../results/chr9_all_popcov_l100.tsv',
+                           '../results/chr9_all_popcov_mem.tsv',
+                           'Population coverage', 'Standard'),
+           read_forge_join('../results/chr9_all_popcov_blowup_l100.tsv',
+                           '../results/chr9_all_popcov_blowup_mem.tsv',
+                           'Population coverage', 'Blowup avoid'),
+           read_forge_join('../results/chr9_all_amb100_max15.tsv',
+                           '../results/chr9_all_amb_mem_max15.tsv',
+                           'Hybrid', 'Standard'),
+           read_forge_join('../results/chr9_all_amb_blowup100_max15.tsv',
+                           '../results/chr9_all_amb_blowup_mem_max15.tsv',
+                           'Hybrid',  'Blowup avoid'))
+
+# TODO: add HISAT2 point
+# TODO: change bottom-right panel plot
+
+plot_forge(m, x_column_name='AlignMem')
+
+pdf(file='fig2.pdf', onefile=F)
+plot_forge(m, x_column_name='AlignMem')
+dev.off()
+```
