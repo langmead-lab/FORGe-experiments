@@ -15,6 +15,7 @@ library(gridExtra)
 ```{r set_dir}
 # Depends on your system
 # setwd('~/git/vis-experiments/Rplot')
+setwd('~/Genomics/vis-experiments/Rplot')
 ```
 
 ```{r combined_plot}
@@ -36,7 +37,7 @@ grid_arrange_shared_legend <- function(...) {
 
 ```{r read_forge}
 read_forge <- function (fn, series, blowup) {
-  tab <- cbind(read.csv(fn, sep='\t'), list('series'=series, 'blowup'=blowup))
+  tab <- cbind(read.csv(fn, sep='\t', comment.char='#'), list('series'=series, 'blowup'=blowup))
   tab$incorrect <- tab$Aligned - tab$Overall
   tab$cor_minus_incor <- tab$Overall - tab$incorrect
   tab
@@ -50,7 +51,7 @@ read_forge <- function (fn, series, blowup) {
 * Pop cov, hybrid, with blowup avoidance
 
 ```{r chr19_sim}
-plot_forge <- function(m, x_column_name='Pct', hap='A', plot_parametric=T) {
+plot_forge <- function(m, x_column_name='Pct', hap='A', plot_parametric=T, x_label='% SNPs', auto=auto) {
   m$horizontal <- m[[x_column_name]]  # trick so I can use "varticle" bareword below
   # TODO: add the haplotypes
   m <- m %>% filter(Hap == hap)
@@ -63,7 +64,20 @@ plot_forge <- function(m, x_column_name='Pct', hap='A', plot_parametric=T) {
     ggplot(m, aes(x=horizontal, y=vertical, color=series, linetype=blowup)) +
       geom_line() +
       geom_point(data=mg, aes(x=x, y=y, fill=series), shape=23, color='black', size=3, alpha=0.5) +
-      labs(x='% SNPs', y=y_label) +
+      #geom_point(data=auto, aes(x=AlignMem, y=y_column_name), shape=23, color='black', size=3, alpha=0.5) +
+      labs(x=x_label, y=y_label) +
+      theme_bw() + theme(legend.title=element_blank())
+  }
+  curve_helper_mem <- function(m, y_column_name, y_label) {
+    m$vertical <- m[[y_column_name]]  # trick so I can use "varticle" bareword below
+    # following line construct data frame for just the optimal points
+    mg <- m %>% dplyr::group_by(series, blowup) %>%
+      dplyr::summarise(y=horizontal[which(cor_minus_incor == max(cor_minus_incor))[1]],
+                       x=vertical[which(cor_minus_incor == max(cor_minus_incor))[1]])
+    ggplot(m, aes(x=vertical, y=horizontal, color=series, linetype=blowup)) +
+      geom_line() +
+      geom_point(data=mg, aes(x=x, y=y, fill=series), shape=23, color='black', size=3, alpha=0.5) +
+      labs(x=x_label, y=y_label) +
       theme_bw() + theme(legend.title=element_blank())
   }
   parametric_helper <- function(m) {
@@ -83,12 +97,12 @@ plot_forge <- function(m, x_column_name='Pct', hap='A', plot_parametric=T) {
       geom_point(data=rbind(zero_pct, full_pct), aes(x=x, y=y),
                  shape=16, fill='black', color='black', size=3) +
       # labels for optimum points
-      geom_text_repel(data=mg, aes(x=x, y=y, label=paste0(pct, '%'), color=series),
-                      segment.color='black', point.padding=0.7,
-                      min.segment.length = unit(0, 'lines')) +
+      #geom_text_repel(data=mg, aes(x=x, y=y, label=paste0(pct, '%'), color=series),
+      #                segment.color='black', point.padding=0.7,
+      #                min.segment.length = unit(0, 'lines')) +
       # labels for 0/100% points
-      geom_text_repel(data=zero_pct, aes(x=x, y=y, label='0%')) +
-      geom_text_repel(data=full_pct, aes(x=x, y=y, label='100%')) +
+      #geom_text_repel(data=zero_pct, aes(x=x, y=y, label='0%')) +
+      #geom_text_repel(data=full_pct, aes(x=x, y=y, label='100%')) +
       labs(x='% reads incorrect', y='% reads correct') +
       theme_bw() + theme(legend.title=element_blank())
   }
@@ -98,7 +112,61 @@ plot_forge <- function(m, x_column_name='Pct', hap='A', plot_parametric=T) {
   if(plot_parametric) {
     p_ci <- parametric_helper(m)
   } else {
-    # TODO: make this the x = % SNPs, y = memory plot
+    p_ci <- curve_helper_mem(m, 'Pct', x_label)
+  }
+  grid_arrange_shared_legend(p_ra, p_ca, p_co, p_ci)
+}
+```
+
+```{r chr9_sim_strat}
+plot_forge_strat <- function(m, x_column_name='Pct', hap='A', plot_parametric=T, x_label='% SNPs') {
+  m$horizontal <- m[[x_column_name]]  # trick so I can use "varticle" bareword below
+  m$strat <- as.factor(m$strat)
+  # TODO: add the haplotypes
+  m <- m %>% filter(Hap == hap)
+  curve_helper <- function(m, y_column_name, y_label) {
+    m$vertical <- m[[y_column_name]]  # trick so I can use "varticle" bareword below
+    # following line construct data frame for just the optimal points
+    mg <- m %>% dplyr::group_by(series, strat) %>%
+      dplyr::summarise(y=vertical[which(cor_minus_incor == max(cor_minus_incor))[1]],
+                       x=horizontal[which(cor_minus_incor == max(cor_minus_incor))[1]])
+    ggplot(m, aes(x=horizontal, y=vertical, color=strat)) +
+      geom_line() +
+      geom_point(data=mg, aes(x=x, y=y, fill=strat), shape=23, color='black', size=3, alpha=0.5) +
+      labs(x=x_label, y=y_label) +
+      theme_bw() + theme(legend.title=element_blank())
+  }
+  parametric_helper <- function(m) {
+    mg <- m %>% dplyr::group_by(series, strat) %>%
+      dplyr::summarise(y=Overall[which(cor_minus_incor == max(cor_minus_incor))[1]],
+                       x=incorrect[which(cor_minus_incor == max(cor_minus_incor))[1]],
+                       pct=horizontal[which(cor_minus_incor == max(cor_minus_incor))[1]])
+    m <- m %>% arrange(horizontal)
+    zero_pct <- data.frame(x=c(m$incorrect[1]), y=c(m$Overall[1]))
+    full_pct <- data.frame(x=c(m$incorrect[nrow(m)]), y=c(m$Overall[nrow(m)]))
+    ggplot(m) +
+      geom_path(aes(x=incorrect, y=Overall, color=strat)) +
+      # optimal points
+      geom_point(data=mg, aes(x=x, y=y, fill=strat),
+                 shape=23, color='black', size=3, alpha=0.5) +
+      # 0 and 100% points
+      #geom_point(data=rbind(zero_pct, full_pct), aes(x=x, y=y),
+      #           shape=16, fill='black', color='black', size=3) +
+      # labels for optimum points
+      #geom_text_repel(data=mg, aes(x=x, y=y, label=paste0(pct, '%'), color=series),
+      #                segment.color='black', point.padding=0.7,
+      #                min.segment.length = unit(0, 'lines')) +
+      # labels for 0/100% points
+      #geom_text_repel(data=zero_pct, aes(x=x, y=y, label='0%')) +
+      #geom_text_repel(data=full_pct, aes(x=x, y=y, label='100%')) +
+      labs(x='% reads incorrect', y='% reads correct') +
+      theme_bw() + theme(legend.title=element_blank())
+  }
+  p_ra <- curve_helper(m, 'Aligned', '% reads aligned')
+  p_ca <- curve_helper(m, 'Correct', '% alignments correct') 
+  p_co <- curve_helper(m, 'Overall', '% reads correct')
+  if(plot_parametric) {
+    p_ci <- parametric_helper(m)
   }
   grid_arrange_shared_legend(p_ra, p_ca, p_co, p_ci)
 }
@@ -141,12 +209,93 @@ m <- rbind(read_forge_join('../results/chr9_all_popcov_l100.tsv',
                            '../results/chr9_all_amb_blowup_mem_max15.tsv',
                            'Hybrid',  'Blowup avoid'))
 
+auto <- read_forge('../results/chr9_all_hisat_auto.tsv', 'HISAT2', 'Auto')
+
 # TODO: add HISAT2 point
 # TODO: change bottom-right panel plot
 
-plot_forge(m, x_column_name='AlignMem')
+plot_forge(m, x_column_name='AlignMem', hap='A', x_label='Alignment Mem (MB)', plot_parametric=F, auto=auto)
 
 pdf(file='fig2.pdf', onefile=F)
-plot_forge(m, x_column_name='AlignMem')
+plot_forge(m, x_column_name='AlignMem', hap='A', x_label='Alignment Mem (MB)', plot_parametric=F, auto=auto)
+dev.off()
+```
+
+```{r fig3}
+m <- rbind(read_forge('../results/chr9_all_bowtie_popcov_l25.tsv',         'Population coverage', 'Standard'),
+           read_forge('../results/chr9_all_bowtie_popcov_blowup_l25.tsv',  'Population coverage', 'Blowup avoid'),
+           read_forge('../results/chr9_all_bowtie_amb_l25.tsv',        'Hybrid',              'Standard'),
+           read_forge('../results/chr9_all_bowtie_amb_blowup_l25.tsv', 'Hybrid',              'Blowup avoid'))
+plot_forge(m)
+
+pdf(file='fig3.pdf', onefile=F)
+plot_forge(m)
+dev.off()
+```
+
+```{r fig4}
+m <- rbind(read_forge_join('../results/chr9_all_bowtie_popcov_l25.tsv',
+                           '../results/chr9_all_popcov_mem_erg.tsv',
+                           'Population coverage', 'Standard'),
+           read_forge_join('../results/chr9_all_bowtie_popcov_blowup_l25.tsv',
+                           '../results/chr9_all_popcov_blowup_mem_erg.tsv',
+                           'Population coverage', 'Blowup avoid'),
+           read_forge_join('../results/chr9_all_bowtie_amb_l25.tsv',
+                           '../results/chr9_all_amb_mem_erg.tsv',
+                           'Hybrid', 'Standard'),
+           read_forge_join('../results/chr9_all_bowtie_amb_blowup_l25.tsv',
+                           '../results/chr9_all_amb_blowup_mem_erg.tsv',
+                           'Hybrid',  'Blowup avoid'))
+
+# TODO: add HISAT2 point
+# TODO: change bottom-right panel plot
+
+plot_forge(m, x_column_name='AlignMem', hap='A', plot_parametric=F)
+
+pdf(file='fig4.pdf', onefile=F)
+plot_forge(m, x_column_name='AlignMem', hap='A', plot_parametric=F)
+dev.off()
+```
+
+```{r fig5}
+m <- rbind(read_forge('../results/chr9_all_popcov_safe.strat_snp.tsv', 'Population coverage', 'Standard'))
+m <- rename(m, strat=SNPs)
+m <- filter(m, strat < 4)
+plot_forge_strat(m)
+
+pdf(file='fig5.pdf', onefile=F)
+plot_forge_strat(m)
+dev.off()
+```
+
+```{r fig6}
+m <- rbind(read_forge('../results/chr9_all_popcov_safe.strat_rare.tsv', 'Population coverage', 'Standard'))
+m <- rename(m, strat=RareSNPs)
+plot_forge_strat(m)
+
+pdf(file='fig6.pdf', onefile=F)
+plot_forge_strat(m)
+dev.off()
+```
+
+```{r fig7}
+m <- rbind(read_forge('../results/chr9_all_popcov.strat_region.tsv', 'Population coverage', 'Standard'))
+m <- rename(m, strat=Region)
+plot_forge_strat(m)
+
+pdf(file='fig7.pdf', onefile=F)
+plot_forge_strat(m)
+dev.off()
+```
+
+```{r fig8}
+m <- rbind(read_forge('../results/chr9_all_popcov_l100.tsv',         'Population coverage', 'All'),
+           read_forge('../results/ceu/chr9_ceu_popcov_l100.tsv',  'Population coverage', 'CEU'),
+           read_forge('../results/chr9_all_amb100_max15.tsv',        'Hybrid',              'All'),
+           read_forge('../results/ceu/chr9_ceu_amb100_l100.tsv', 'Hybrid',              'CEU'))
+plot_forge(m, x_column_name='Num', x_label='# SNPs')
+
+pdf(file='fig8.pdf', onefile=F)
+plot_forge(m, x_column_name='Num', x_label='# SNPs')
 dev.off()
 ```
