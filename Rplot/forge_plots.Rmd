@@ -51,37 +51,42 @@ read_forge <- function (fn, series, blowup) {
 * Pop cov, hybrid, with blowup avoidance
 
 ```{r chr19_sim}
-plot_forge <- function(m, x_column_name='Pct', hap='A', plot_parametric=T, x_label='% SNPs', auto=auto) {
+plot_forge <- function(m, groups=list('series', 'blowup'), x_column_name='Pct', hap='A', plot_parametric=T, x_label='% SNPs') {
   m$horizontal <- m[[x_column_name]]  # trick so I can use "varticle" bareword below
   # TODO: add the haplotypes
   m <- m %>% filter(Hap == hap)
   curve_helper <- function(m, y_column_name, y_label) {
     m$vertical <- m[[y_column_name]]  # trick so I can use "varticle" bareword below
     # following line construct data frame for just the optimal points
-    mg <- m %>% dplyr::group_by(series, blowup) %>%
+    mg <- m %>% dplyr::group_by_(.dots = groups) %>%
       dplyr::summarise(y=vertical[which(cor_minus_incor == max(cor_minus_incor))[1]],
                        x=horizontal[which(cor_minus_incor == max(cor_minus_incor))[1]])
     ggplot(m, aes(x=horizontal, y=vertical, color=series, linetype=blowup)) +
       geom_line() +
       geom_point(data=mg, aes(x=x, y=y, fill=series), shape=23, color='black', size=3, alpha=0.5) +
-      #geom_point(data=auto, aes(x=AlignMem, y=y_column_name), shape=23, color='black', size=3, alpha=0.5) +
       labs(x=x_label, y=y_label) +
       theme_bw() + theme(legend.title=element_blank())
   }
   curve_helper_mem <- function(m, y_column_name, y_label) {
+    # Remove HISAT2 Auto lines
+    m <- m %>% filter(Pct != 'Auto')
+    m$Pct <- as.numeric(m$Pct)
+    
+    # Flip x- and y-axes
     m$vertical <- m[[y_column_name]]  # trick so I can use "varticle" bareword below
+    
     # following line construct data frame for just the optimal points
-    mg <- m %>% dplyr::group_by(series, blowup) %>%
+    mg <- m %>% dplyr::group_by_(.dots = groups) %>%
       dplyr::summarise(y=horizontal[which(cor_minus_incor == max(cor_minus_incor))[1]],
                        x=vertical[which(cor_minus_incor == max(cor_minus_incor))[1]])
     ggplot(m, aes(x=vertical, y=horizontal, color=series, linetype=blowup)) +
       geom_line() +
       geom_point(data=mg, aes(x=x, y=y, fill=series), shape=23, color='black', size=3, alpha=0.5) +
-      labs(x=x_label, y=y_label) +
+      labs(x=y_label, y=x_label) +
       theme_bw() + theme(legend.title=element_blank())
   }
   parametric_helper <- function(m) {
-    mg <- m %>% dplyr::group_by(series, blowup) %>%
+    mg <- m %>% dplyr::group_by_(.dots = groups) %>%
       dplyr::summarise(y=Overall[which(cor_minus_incor == max(cor_minus_incor))[1]],
                        x=incorrect[which(cor_minus_incor == max(cor_minus_incor))[1]],
                        pct=horizontal[which(cor_minus_incor == max(cor_minus_incor))[1]])
@@ -112,7 +117,7 @@ plot_forge <- function(m, x_column_name='Pct', hap='A', plot_parametric=T, x_lab
   if(plot_parametric) {
     p_ci <- parametric_helper(m)
   } else {
-    p_ci <- curve_helper_mem(m, 'Pct', x_label)
+    p_ci <- curve_helper_mem(m, 'Pct', '% SNPs')
   }
   grid_arrange_shared_legend(p_ra, p_ca, p_co, p_ci)
 }
@@ -209,15 +214,18 @@ m <- rbind(read_forge_join('../results/chr9_all_popcov_l100.tsv',
                            '../results/chr9_all_amb_blowup_mem_max15.tsv',
                            'Hybrid',  'Blowup avoid'))
 
-auto <- read_forge('../results/chr9_all_hisat_auto.tsv', 'HISAT2', 'Auto')
+auto <- read_forge('../results/chr9_all_hisat_auto.tsv', 'HISAT2 Auto', 'Standard')
+auto$Num <- auto$Pct
+
+m <- rbind(m, auto)
 
 # TODO: add HISAT2 point
 # TODO: change bottom-right panel plot
 
-plot_forge(m, x_column_name='AlignMem', hap='A', x_label='Alignment Mem (MB)', plot_parametric=F, auto=auto)
+plot_forge(m, x_column_name='AlignMem', hap='A', x_label='Alignment Mem (MB)', plot_parametric=F)
 
 pdf(file='fig2.pdf', onefile=F)
-plot_forge(m, x_column_name='AlignMem', hap='A', x_label='Alignment Mem (MB)', plot_parametric=F, auto=auto)
+plot_forge(m, x_column_name='AlignMem', hap='A', x_label='Alignment Mem (MB)', plot_parametric=F)
 dev.off()
 ```
 
@@ -289,13 +297,26 @@ dev.off()
 ```
 
 ```{r fig8}
-m <- rbind(read_forge('../results/chr9_all_popcov_l100.tsv',         'Population coverage', 'All'),
-           read_forge('../results/ceu/chr9_ceu_popcov_l100.tsv',  'Population coverage', 'CEU'),
-           read_forge('../results/chr9_all_amb100_max15.tsv',        'Hybrid',              'All'),
-           read_forge('../results/ceu/chr9_ceu_amb100_l100.tsv', 'Hybrid',              'CEU'))
+m <- rbind(read_forge_join('../results/chr9_all_popcov_l100.tsv', '../results/chr9_all_popcov_mem_erg.tsv',
+                           'Population coverage', 'All'),
+           read_forge_join('../results/ceu/chr9_ceu_popcov_l100.tsv', '../results/ceu/chr9_ceu_counts.tsv', 
+                      'Population coverage', 'CEU'),
+           read_forge_join('../results/chr9_all_amb100_max15.tsv', '../results/chr9_all_amb_mem_max15.tsv',
+                      'Hybrid', 'All'),
+           read_forge_join('../results/ceu/chr9_ceu_amb100_l100.tsv', '../results/ceu/chr9_ceu_counts.tsv', 
+                      'Hybrid', 'CEU'))
 plot_forge(m, x_column_name='Num', x_label='# SNPs')
 
 pdf(file='fig8.pdf', onefile=F)
 plot_forge(m, x_column_name='Num', x_label='# SNPs')
+dev.off()
+```
+
+```{r fig9}
+m <- read_forge('../results/full_genome/popcov_blowup_sim.tsv', 'Population coverage', 'Blowup Avoid')
+plot_forge(m)
+
+pdf(file='fig9.pdf', onefile=F)
+plot_forge(m)
 dev.off()
 ```
