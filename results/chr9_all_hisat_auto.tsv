@@ -3,5 +3,5 @@
 # SNPs chosen with HISAT2 auto pruning script
 # Read length 100
 Pct	Hap	Aligned	Correct	Overall	AlignMem	BuildMem
-Auto	A	97.039295	99.564383	96.616575	641.2	12222.0
-Auto	B	97.041358	99.564956	96.619186	640.1	12222.0
+Auto	A	96.887640	94.360818	91.423970	637.4	12222.0
+Auto	B	96.890090	94.373150	91.438230	637.3	12222.0

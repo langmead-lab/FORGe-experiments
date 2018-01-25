@@ -6,8 +6,8 @@ export EXP_HOME=/home-3/mpritt4@jhu.edu/work/jacob/vis_exp_chr9
 export SCRIPT_HOME=/home-3/mpritt4@jhu.edu/work/jacob/vis-experiments/scripts
 
 cd $EXP_HOME
-#wget ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar_20170801.vcf.gz
-#gunzip clinvar_20170801.vcf.gz
+wget ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar_20170801.vcf.gz
+gunzip clinvar_20170801.vcf.gz
 
 export LEN=25
 for HAP in A B
