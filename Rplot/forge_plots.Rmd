@@ -21,17 +21,28 @@ setwd('~/Genomics/vis-experiments/Rplot')
 ```{r combined_plot}
 # Borrowed from: https://rpubs.com/sjackman/grid_arrange_shared_legend
 # Thanks to Shaun Jackman
-grid_arrange_shared_legend <- function(...) {
+grid_arrange_shared_legend <- function(show_legend, ...) {
     plots <- list(...)
-    g <- ggplotGrob(plots[[1]] + theme(legend.position="bottom"))$grobs
-    legend <- g[[which(sapply(g, function(x) x$name) == "guide-box")]]
-    lheight <- sum(legend$height)
-    grid.arrange(
-        do.call(arrangeGrob, lapply(plots, function(x)
-            x + theme(legend.position="none"))),
-        legend,
-        ncol = 1,
-        heights = unit.c(unit(1, "npc") - lheight, lheight))
+    if (show_legend) {
+      g <- ggplotGrob(plots[[1]] + theme(legend.position="bottom"))$grobs
+      legend <- g[[which(sapply(g, function(x) x$name) == "guide-box")]]
+      lheight <- sum(legend$height)
+      grid.arrange(
+          do.call(arrangeGrob, lapply(plots, function(x)
+              x + theme(legend.position="none"))),
+          legend,
+          ncol = 1,
+          heights = unit.c(unit(1, "npc") - lheight, lheight))
+    }
+    else {
+      g <- ggplotGrob(plots[[1]] + theme(legend.position="bottom"))$grobs
+      legend <- g[[which(sapply(g, function(x) x$name) == "guide-box")]]
+      grid.arrange(
+          do.call(arrangeGrob, lapply(plots, function(x)
+              x + theme(legend.position="none"))),
+          ncol = 1,
+          heights = unit.c(unit(1, "npc")))
+    }
 }
 ```
 
@@ -51,7 +62,7 @@ read_forge <- function (fn, series, blowup) {
 * Pop cov, hybrid, with blowup avoidance
 
 ```{r chr19_sim}
-plot_forge <- function(m, groups=list('series', 'blowup'), x_column_name='Pct', hap='A', plot_parametric=T, x_label='% SNPs') {
+plot_forge <- function(m, groups=list('series', 'blowup'), x_column_name='Pct', hap='A', plot_parametric=T, x_label='% SNPs', show_legend=T) {
   m$horizontal <- m[[x_column_name]]  # trick so I can use "varticle" bareword below
   # TODO: add the haplotypes
   m <- m %>% filter(Hap == hap)
@@ -61,15 +72,15 @@ plot_forge <- function(m, groups=list('series', 'blowup'), x_column_name='Pct', 
     mg <- m %>% dplyr::group_by_(.dots = groups) %>%
       dplyr::summarise(y=vertical[which(cor_minus_incor == max(cor_minus_incor))[1]],
                        x=horizontal[which(cor_minus_incor == max(cor_minus_incor))[1]])
-    ggplot(m, aes(x=horizontal, y=vertical, color=series, linetype=blowup)) +
+    ggplot(m, aes(x=horizontal, y=vertical, color=get(groups[[1]]), linetype=get(groups[[2]]))) +
       geom_line() +
-      geom_point(data=mg, aes(x=x, y=y, fill=series), shape=23, color='black', size=3, alpha=0.5) +
+      geom_point(data=mg, aes(x=x, y=y, fill=get(groups[[1]])), shape=23, color='black', size=3, alpha=0.5) +
       labs(x=x_label, y=y_label) +
       theme_bw() + theme(legend.title=element_blank())
   }
   curve_helper_mem <- function(m, y_column_name, y_label) {
     # Remove HISAT2 Auto lines
-    m <- m %>% filter(Pct != 'Auto')
+    m <- m %>% filter(Pct != 'Auto' && Pct != 'Major')
     m$Pct <- as.numeric(m$Pct)
     
     # Flip x- and y-axes
@@ -79,9 +90,9 @@ plot_forge <- function(m, groups=list('series', 'blowup'), x_column_name='Pct', 
     mg <- m %>% dplyr::group_by_(.dots = groups) %>%
       dplyr::summarise(y=horizontal[which(cor_minus_incor == max(cor_minus_incor))[1]],
                        x=vertical[which(cor_minus_incor == max(cor_minus_incor))[1]])
-    ggplot(m, aes(x=vertical, y=horizontal, color=series, linetype=blowup)) +
+    ggplot(m, aes(x=vertical, y=horizontal, color=get(groups[[1]]), linetype=get(groups[[2]]))) +
       geom_line() +
-      geom_point(data=mg, aes(x=x, y=y, fill=series), shape=23, color='black', size=3, alpha=0.5) +
+      geom_point(data=mg, aes(x=x, y=y, fill=get(groups[[1]])), shape=23, color='black', size=3, alpha=0.5) +
       labs(x=y_label, y=x_label) +
       theme_bw() + theme(legend.title=element_blank())
   }
@@ -94,9 +105,9 @@ plot_forge <- function(m, groups=list('series', 'blowup'), x_column_name='Pct', 
     zero_pct <- data.frame(x=c(m$incorrect[1]), y=c(m$Overall[1]))
     full_pct <- data.frame(x=c(m$incorrect[nrow(m)]), y=c(m$Overall[nrow(m)]))
     ggplot(m) +
-      geom_path(aes(x=incorrect, y=Overall, color=series, linetype=blowup)) +
+      geom_path(aes(x=incorrect, y=Overall, color=get(groups[[1]]), linetype=get(groups[[2]]))) +
       # optimal points
-      geom_point(data=mg, aes(x=x, y=y, fill=series),
+      geom_point(data=mg, aes(x=x, y=y, fill=get(groups[[1]])),
                  shape=23, color='black', size=3, alpha=0.5) +
       # 0 and 100% points
       geom_point(data=rbind(zero_pct, full_pct), aes(x=x, y=y),
@@ -119,7 +130,7 @@ plot_forge <- function(m, groups=list('series', 'blowup'), x_column_name='Pct', 
   } else {
     p_ci <- curve_helper_mem(m, 'Pct', '% SNPs')
   }
-  grid_arrange_shared_legend(p_ra, p_ca, p_co, p_ci)
+  grid_arrange_shared_legend(show_legend, p_ra, p_ca, p_co, p_ci)
 }
 ```
 
@@ -173,7 +184,7 @@ plot_forge_strat <- function(m, x_column_name='Pct', hap='A', plot_parametric=T,
   if(plot_parametric) {
     p_ci <- parametric_helper(m)
   }
-  grid_arrange_shared_legend(p_ra, p_ca, p_co, p_ci)
+  grid_arrange_shared_legend(T, p_ra, p_ca, p_co, p_ci)
 }
 ```
 
@@ -217,7 +228,10 @@ m <- rbind(read_forge_join('../results/chr9_all_popcov_l100.tsv',
 auto <- read_forge('../results/chr9_all_hisat_auto.tsv', 'HISAT2 Auto', 'Standard')
 auto$Num <- auto$Pct
 
-m <- rbind(m, auto)
+major <- read_forge('../results/chr9_major_ref.tsv', 'Major Allele Ref', 'Standard')
+major$Num <- major$Pct
+
+m <- rbind(m, auto, major)
 
 # TODO: add HISAT2 point
 # TODO: change bottom-right panel plot
@@ -314,9 +328,9 @@ dev.off()
 
 ```{r fig9}
 m <- read_forge('../results/full_genome/popcov_blowup_sim.tsv', 'Population coverage', 'Blowup Avoid')
-plot_forge(m)
+plot_forge(m, show_legend=F)
 
 pdf(file='fig9.pdf', onefile=F)
-plot_forge(m)
+plot_forge(m, show_legend=F)
 dev.off()
 ```
