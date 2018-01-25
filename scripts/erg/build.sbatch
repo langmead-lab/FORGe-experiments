@@ -17,6 +17,7 @@ export PCT=$SLURM_ARRAY_TASK_ID
 module load bowtie
 for MODE in popcov popcov_blowup amb amb_blowup
 do
+        echo $MODE
         $VIS_HOME/build.py --reference hs37d5.fa --vars snps.1ksnp --window-size 25 --erg erg/chr9_segments_${MODE}${PCT}.fa --sorted ordered_${MODE}25.txt --pct $PCT
         echo 'Finished generating fasta'
         cat chr9.fa erg/chr9_segments_${MODE}${PCT}.fa > erg/chr9_${MODE}${PCT}.fa
