@@ -334,3 +334,44 @@ pdf(file='fig9.pdf', onefile=F)
 plot_forge(m, show_legend=F)
 dev.off()
 ```
+
+```{r read_unique_perfect}
+read_unique_perf  <- function (fn) {
+  tab <- read.csv(fn, sep='\t', comment.char='#')
+  tab$Unique <- tab$UniqueA + tab$UniqueB
+  tab$Perfect <- tab$PerfectA + tab$PerfectB
+  tab
+}
+```
+
+```{r unique_perfect}
+plot_unique_perf <- function(m) {
+  m <- m %>% filter(Pct != 'Auto')
+  m$Pct <- as.numeric(m$Pct)
+  m$param <- m[['Pct']]
+  m$horizontal <- m[['Unique']]
+  m$vertical <- m[['Perfect']]
+  
+  m <- m %>% arrange(param)
+
+  #ggplot(m, aes(x=horizontal, y=vertical)) +
+  #    geom_line() +
+  #    labs(x='Unique', y='Perfect') +
+  #    theme_bw() + theme(legend.title=element_blank())
+  
+  ggplot(m) +
+      geom_path(aes(x=Unique, y=Perfect)) +
+      labs(x='Unique', y='Perfect') +
+      theme_bw() + theme(legend.title=element_blank())
+}
+```
+
+```{r fig10}
+m <- read_unique_perf('../results/full_genome/unique_perfect_vars.tsv')
+
+plot_unique_perf(m)
+
+pdf(file='fig10.pdf', onefile=F)
+plot_unique_perf(m)
+dev.off()
+```
