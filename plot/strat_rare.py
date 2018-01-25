@@ -24,7 +24,7 @@ elif RANK_MODE == 1:
     RANK_NAME = 'popcov_blowup'
     RANK_DESC = 'Population Coverage + Blowup'
 elif RANK_MODE == 2:
-    RANK_NAME = 'amb'
+    RANK_NAME = 'amb_max15'
     RANK_DESC = 'Ambiguity'
 elif RANK_MODE == 3:
     RANK_NAME = 'amb_blowup'
@@ -116,7 +116,7 @@ def results_from_dict(results):
         correct.append([100*results[p][i][1] for p in pct])
         overall.append([100*results[p][i][2] for p in pct])
         incorrect.append([aligned[i][p] * (100-correct[i][p]) / 100 for p in range(len(pct))])
-        opt.append(findOptPoint(correct[i], incorrect[i]))
+        opt.append(findOptPoint(overall[i], incorrect[i]))
 
     return pct, aligned, correct, overall, incorrect, opt
 
@@ -126,6 +126,7 @@ def results_from_dict(results):
 results = read_tsv('../results/chr9_all_'+RANK_NAME+'_safe.strat_rare.tsv')
 pct, aligned, correct, accuracy, incorrect, opt = results_from_dict(results)
 
+print([pct[i] for i in opt])
 
 #########################
 
@@ -171,6 +172,50 @@ for i in range(MAX_STRAT+1):
     dy = (accuracy[i][1] - accuracy[i][0]) / (ylim[1]-ylim[0])
     dx = (incorrect[i][1] - incorrect[i][0]) / (xlim[1]-xlim[0])
     axs[1,1].plot(incorrect[i][0], accuracy[i][0], color=COLORS[i], marker='o', ms=12)
+
+
+results = read_tsv('../results/chr9_all_amb_max15_safe.strat_rare.tsv')
+pct, aligned, correct, accuracy, incorrect, opt = results_from_dict(results)
+
+print([pct[i] for i in opt])
+
+COLORS = ['red', 'teal']
+for i in range(MAX_STRAT+1):
+    lab = STRAT_DESC[i]
+    axs[0,0].plot(pct, aligned[i], label=lab, linewidth=width, color=COLORS[i])
+    axs[0,0].plot(pct[opt[i]], aligned[i][opt[i]], color=COLORS[i], marker='D', ms=10)
+
+axs[0,0].set_xlabel('% SNPs')
+axs[0,0].set_ylabel('% Reads Aligned')
+
+for i in range(MAX_STRAT+1):
+    lab = STRAT_DESC[i]
+    axs[0,1].plot(pct, correct[i], label=lab, linewidth=width, color=COLORS[i])
+    axs[0,1].plot(pct[opt[i]], correct[i][opt[i]], color=COLORS[i], marker='D', ms=10)
+axs[0,1].set_xlabel('% SNPs')
+axs[0,1].set_ylabel('% Correct of Aligned')
+
+for i in range(MAX_STRAT+1):
+    lab = STRAT_DESC[i]
+    axs[1,0].plot(pct, accuracy[i], label=lab, linewidth=width, color=COLORS[i])
+    axs[1,0].plot(pct[opt[i]], accuracy[i][opt[i]], color=COLORS[i], marker='D', ms=10)
+axs[1,0].set_xlabel('% SNPs')
+axs[1,0].set_ylabel('% Correct Overall')
+
+for i in range(MAX_STRAT+1):
+    lab = STRAT_DESC[i]
+    axs[1,1].plot(incorrect[i], accuracy[i], label=lab, linewidth=width, color=COLORS[i])
+    axs[1,1].plot(incorrect[i][opt[i]], accuracy[i][opt[i]], color=COLORS[i], marker='D', ms=10)
+
+    dy = (accuracy[i][-1] - accuracy[i][-2]) / (ylim[1]-ylim[0])
+    dx = (incorrect[i][-1] - incorrect[i][-2]) / (xlim[1]-xlim[0])
+    axs[1,1].plot(incorrect[i][-1], accuracy[i][-1], color=COLORS[i], marker=(3, 1, -90+math.degrees(math.atan2(dy,dx))), ms=18)
+
+    dy = (accuracy[i][1] - accuracy[i][0]) / (ylim[1]-ylim[0])
+    dx = (incorrect[i][1] - incorrect[i][0]) / (xlim[1]-xlim[0])
+    axs[1,1].plot(incorrect[i][0], accuracy[i][0], color=COLORS[i], marker='o', ms=12)
+
+
 
 #plt.legend(bbox_to_anchor=(-1,-0.1), loc='upper left')
 plt.legend(bbox_to_anchor=(1,2), loc='upper left')

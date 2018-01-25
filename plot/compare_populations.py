@@ -5,6 +5,7 @@ Plot chromosome-specific accuracy results
 '''
 
 import matplotlib.pyplot as plt
+import math
 
 chrom = '9'
 
@@ -94,7 +95,8 @@ if PLOT_POP_COV:
     pct_pc_ceu, aligned_pc_ceu, correct_pc_ceu, accuracy_pc_ceu, incorrect_pc_ceu, mem_pc_ceu, count_pc_ceu, opt_pc_ceu = results_from_dict(popcov_ceu, total_ceu)
 
 if PLOT_AMB:
-    amb = read_tsv('../results/chr' + chrom + '_all_amb_l100.tsv')
+    #amb = read_tsv('../results/chr' + chrom + '_all_amb_l100.tsv')
+    amb = read_tsv('../results/chr9_all_amb100_max15.tsv')
     pct_amb, aligned_amb, correct_amb, accuracy_amb, incorrect_amb, mem_amb, count_amb, opt_amb = results_from_dict(amb, total_all)
 
     amb_ceu = read_tsv('../results/ceu/chr' + chrom + '_ceu_amb100_l100.tsv')
@@ -162,6 +164,11 @@ if PLOT_AMB_COMBINED:
 axs[0,0].set_xlim([0,600])
 axs[0,0].set_xlabel('Thousands of SNPs')
 axs[0,0].set_ylabel('% Reads Aligned')
+
+print(count_pc)
+print(opt_pc)
+print(count_pc_ceu)
+print(opt_pc_ceu)
 
 if PLOT_POP_COV:
     axs[0,1].plot(count_pc, correct_pc, color='blue', label='All, Pop Cov', linewidth=width)
@@ -234,6 +241,21 @@ if PLOT_AMB_COMBINED:
     axs[1,1].plot(incorrect_amb_combined[opt_amb_combined], accuracy_amb_combined[opt_amb_combined], color='red', marker='D', ms=10)
     axs[1,1].plot(incorrect_amb_combined_ceu, accuracy_amb_combined_ceu, color='red', linestyle='--', label='All, Hybrid + Blowup', linewidth=width)
     axs[1,1].plot(incorrect_amb_combined_ceu[opt_amb_combined_ceu], accuracy_amb_combined_ceu[opt_amb_combined_ceu], color='red', marker='D', ms=10)
+
+# Add arrowheads
+xlim = [5.36, 5.48]
+ylim = [91.1, 91.7]
+if PLOT_POP_COV:
+    dy = (accuracy_pc[-1] - accuracy_pc[-2]) / (ylim[1]-ylim[0])
+    dx = (incorrect_pc[-1] - incorrect_pc[-2]) / (xlim[1]-xlim[0])
+    axs[1,1].plot(incorrect_pc[-1], accuracy_pc[-1], color='blue', marker=(3, 1, -90+math.degrees(math.atan2(dy,dx))), ms=18)
+    axs[1,1].plot(incorrect_pc[0], accuracy_pc[0], color='blue', marker='o', ms=12)
+if PLOT_AMB:
+    dy = (accuracy_amb[-1] - accuracy_amb[-2]) / (ylim[1]-ylim[0])
+    dx = (incorrect_amb[-1] - incorrect_amb[-2]) / (xlim[1]-xlim[0])
+    axs[1,1].plot(incorrect_amb[-1], accuracy_amb[-1], color='red', marker=(3, 1, -90+math.degrees(math.atan2(dy,dx))), ms=18)
+    axs[1,1].plot(incorrect_amb[0], accuracy_amb[0], color='red', marker='o', ms=12)
+
 #plt.legend(bbox_to_anchor=(-1,-0.1), loc='upper left')
 plt.legend(bbox_to_anchor=(1,2), loc='upper left')
 axs[1,1].set_xlabel('% Incorrect')

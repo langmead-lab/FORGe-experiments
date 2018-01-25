@@ -20,8 +20,8 @@ PLOT_POP_COV_PC = False
 PLOT_AMB_PC = False
 PLOT_VARGAS = False
 
-MEM_MODE = 'AlignMem'
-MEM_LABEL = 'Align Mem (MB)'
+MEM_MODE = 'BuildMem'
+MEM_LABEL = 'Build Mem (GB)'
 
 def val(row, label, header):
     if label in header:
@@ -134,13 +134,15 @@ if PLOT_POP_COV_COMBINED:
     pct_pcb, aligned_pcb, correct_pcb, accuracy_pcb, incorrect_pcb, mem_pcb, opt_pcb = results_from_dict(popcov_blowup, popcov_blowup_mem)
 
 if PLOT_AMB:
-    amb = read_tsv('../results/chr' + chrom + '_all_amb_l100.tsv')
-    amb_mem = read_mem('../results/chr' + chrom + '_all_amb_mem.tsv')
+    #amb = read_tsv('../results/chr' + chrom + '_all_amb_l100.tsv')
+    amb = read_tsv('../results/chr9_all_amb100_max15.tsv')
+    amb_mem = read_mem('../results/chr' + chrom + '_all_amb_mem_max15.tsv')
     pct_amb, aligned_amb, correct_amb, accuracy_amb, incorrect_amb, mem_amb, opt_amb = results_from_dict(amb, amb_mem)
 
 if PLOT_AMB_COMBINED:
-    amb_blowup = read_tsv('../results/chr' + chrom + '_all_amb_blowup_l100.tsv')
-    amb_blowup_mem = read_mem('../results/chr' + chrom + '_all_amb_blowup_mem.tsv')
+    #amb_blowup = read_tsv('../results/chr' + chrom + '_all_amb_blowup_l100.tsv')
+    amb_blowup = read_tsv('../results/chr9_all_amb_blowup100_max15.tsv')
+    amb_blowup_mem = read_mem('../results/chr' + chrom + '_all_amb_blowup_mem_max15.tsv')
     pct_amb_combined, aligned_amb_combined, correct_amb_combined, accuracy_amb_combined, incorrect_amb_combined, mem_amb_combined, opt_amb_combined = results_from_dict(amb_blowup, amb_blowup_mem)
 
 #########################

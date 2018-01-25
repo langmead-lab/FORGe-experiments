@@ -116,7 +116,7 @@ def results_from_dict(results):
         correct.append([100*results[p][i][1] for p in pct])
         overall.append([100*results[p][i][2] for p in pct])
         incorrect.append([aligned[i][p] * (100-correct[i][p]) / 100 for p in range(len(pct))])
-        opt.append(findOptPoint(correct[i], incorrect[i]))
+        opt.append(findOptPoint(overall[i], incorrect[i]))
 
     return pct, aligned, correct, overall, incorrect, opt
 
@@ -158,10 +158,10 @@ for i in range(MAX_STRAT+1):
 axs[1,0].set_xlabel('% SNPs')
 axs[1,0].set_ylabel('% Correct Overall')
 
-for i in range(MAX_STRAT+1):
+for i in range(MAX_STRAT,-1,-1):
     lab = str(i)+' '+STRAT_DESC
     axs[1,1].plot(incorrect[i], accuracy[i], color=COLORS[i], label=lab, linewidth=width)
-    #axs[1,1].plot(incorrect[i][opt[i]], accuracy[i][opt[i]], color=COLORS[i], marker='D', ms=10)
+    axs[1,1].plot(incorrect[i][opt[i]], accuracy[i][opt[i]], color=COLORS[i], marker='D', ms=10)
 
     dy = (accuracy[i][-1] - accuracy[i][-2]) / (ylim[1]-ylim[0])
     dx = (incorrect[i][-1] - incorrect[i][-2]) / (xlim[1]-xlim[0])
