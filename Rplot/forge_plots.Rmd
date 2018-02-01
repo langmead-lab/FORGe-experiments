@@ -266,7 +266,7 @@ plot_fig_strat <- function(m1, m2, m3, groups=list('series', 'strat'), hap='A', 
       labs(x=x_label, y=y_label) +
       theme_bw() + theme(legend.title=element_blank(), axis.text.x = element_text(angle = 30, hjust = 1))
   }
-  parametric_helper <- function(m, x_column_name) {
+  parametric_helper <- function(m, x_column_name, snps=F) {
     m <- m %>% filter(Pct != 'Auto' && Pct != 'Major')
     m$Pct <- as.numeric(m$Pct)
     m$horizontal <- m[[x_column_name]]
@@ -281,7 +281,7 @@ plot_fig_strat <- function(m1, m2, m3, groups=list('series', 'strat'), hap='A', 
     full_pct <- data.frame(x=c(m$incorrect[nrow(m)]), y=c(m$Overall[nrow(m)]))
     
     endpoints <- filter(m, (Pct == 0 | Pct == 100))
-    ggplot(m) +
+    pl <- ggplot(m) +
       geom_path(aes(x=incorrect, y=Overall, color=get(groups[[2]]))) +
       # 0 and 100% points
       geom_point(data=endpoints, aes(x=incorrect, y=Overall),
@@ -298,13 +298,18 @@ plot_fig_strat <- function(m1, m2, m3, groups=list('series', 'strat'), hap='A', 
       #geom_text_repel(data=full_pct, aes(x=x, y=y, label='100%')) +
       labs(x='% reads incorrect', y='% reads correct') +
       theme_bw() + theme(legend.title=element_blank(), axis.text.x = element_text(angle = 30, hjust = 1))
+    if(snps) {
+        pl + coord_cartesian(xlim = c(0.00125, 0.0101), ylim=c(0.85, 0.98))
+    } else {
+        pl
+    }
   }
   
   # TODO: add the haplotypes
   m1 <- m1 %>% filter(Hap == hap)
   p_11 <- curve_helper(m1, 'Pct', '% SNPs', 'Aligned', '% reads aligned')
   p_12 <- curve_helper(m1, 'Pct', '% SNPs', 'Correct', '% alignments correct')
-  p_13 <- parametric_helper(m1, 'Pct')
+  p_13 <- parametric_helper(m1, 'Pct', snps=T)
   
   m2 <- m2 %>% filter(Hap == hap)
   p_21 <- curve_helper(m2, 'Pct', '% SNPs', 'Aligned', '% reads aligned')
