@@ -1,7 +1,0 @@
-
-The following have been reloaded with a version change:
-  1) gcc/5.1.0 => gcc/5.2.0
-
-slurmstepd: error: Job 19036131 exceeded memory limit (32610436 > 25165824), being killed
-slurmstepd: error: Exceeded job memory limit
-slurmstepd: error: *** JOB 19036131 ON compute0038 CANCELLED AT 2017-12-18T17:14:14 ***
