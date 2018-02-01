@@ -264,7 +264,7 @@ plot_fig_strat <- function(m1, m2, m3, groups=list('series', 'strat'), hap='A', 
       geom_line() +
       geom_point(data=mg, aes(x=x, y=y, fill=get(groups[[2]])), shape=23, color='black', size=3, alpha=0.5) +
       labs(x=x_label, y=y_label) +
-      theme_bw() + theme(legend.title=element_blank())
+      theme_bw() + theme(legend.title=element_blank(), axis.text.x = element_text(angle = 30, hjust = 1))
   }
   parametric_helper <- function(m, x_column_name) {
     m <- m %>% filter(Pct != 'Auto' && Pct != 'Major')
@@ -297,7 +297,7 @@ plot_fig_strat <- function(m1, m2, m3, groups=list('series', 'strat'), hap='A', 
       #geom_text_repel(data=zero_pct, aes(x=x, y=y, label='0%')) +
       #geom_text_repel(data=full_pct, aes(x=x, y=y, label='100%')) +
       labs(x='% reads incorrect', y='% reads correct') +
-      theme_bw() + theme(legend.title=element_blank())
+      theme_bw() + theme(legend.title=element_blank(), axis.text.x = element_text(angle = 30, hjust = 1))
   }
   
   # TODO: add the haplotypes
