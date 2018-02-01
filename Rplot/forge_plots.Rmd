@@ -360,13 +360,20 @@ plot_fig4 <- function(m, groups=list('series', 'blowup'), x_column_name='Pct', h
     mg <- m %>% dplyr::group_by_(.dots = groups) %>%
       dplyr::summarise(y=vertical[which(cor_minus_incor == max(cor_minus_incor))[1]],
                        x=horizontal[which(cor_minus_incor == max(cor_minus_incor))[1]])
-    ggplot(m, aes(x=horizontal, y=vertical, color=get(groups[[1]]), linetype=get(groups[[2]]))) +
+    pl <- ggplot(m, aes(x=horizontal, y=vertical, color=get(groups[[1]]), linetype=get(groups[[2]]))) +
       geom_line() +
       geom_point(data=mg, aes(x=x, y=y, fill=get(groups[[1]])), shape=23, color='black', size=3, alpha=0.5) +
       labs(x=x_label, y=y_label) +
       #scale_x_continuous(limits = c(0, 600)) +
-      coord_cartesian(xlim = c(0, 600)) +
+      #coord_cartesian(xlim = c(0, 600)) +
       theme_bw() + theme(legend.title=element_blank())
+    if(y_column_name == 'Aligned') {
+        pl + coord_cartesian(ylim=c(96.9, 97.05), xlim = c(0, 600))
+    } else if(y_column_name == 'Correct') {
+        pl + coord_cartesian(ylim=c(94.425, 94.46), xlim = c(0, 600))
+    } else {
+        pl + coord_cartesian(xlim = c(0, 600))
+    }
   }
   parametric_helper <- function(m) {
     mg <- m %>% dplyr::group_by_(.dots = groups) %>%
@@ -392,6 +399,7 @@ plot_fig4 <- function(m, groups=list('series', 'blowup'), x_column_name='Pct', h
       #geom_text_repel(data=zero_pct, aes(x=x, y=y, label='0%')) +
       #geom_text_repel(data=full_pct, aes(x=x, y=y, label='100%')) +
       labs(x='% reads incorrect', y='% reads correct') +
+      coord_cartesian(ylim=c(91.55,91.65), xlim = c(5.375, 5.41)) +
       theme_bw() + theme(legend.title=element_blank())
   }
   p_ra <- curve_helper(m, 'Aligned', '% reads aligned')
@@ -402,7 +410,7 @@ plot_fig4 <- function(m, groups=list('series', 'blowup'), x_column_name='Pct', h
   } else {
     p_ci <- curve_helper_mem(m, 'Pct', '% SNPs')
   }
-  grid_arrange_shared_legend(show_legend, 2, 1, p_ra, p_ca, p_co, p_ci)
+  grid_arrange_shared_legend(show_legend, 1, 1, p_ra, p_ca, p_ci)
 }
 ```
 
@@ -419,7 +427,7 @@ m$Num <- m$Num / 1000
 
 plot_fig4(m, x_column_name='Num', x_label='Thousands of SNPs')
 
-pdf(file='fig4.pdf', onefile=F)
+pdf(file='fig4.pdf', onefile=F, width=7, height=3)
 plot_fig4(m, x_column_name='Num', x_label='Thousands SNPs')
 dev.off()
 ```
