@@ -104,12 +104,12 @@ plot_fig1 <- function(m, groups=list('series', 'blowup'), hap='A', show_legend=T
     
     # following line construct data frame for just the optimal points
     mg <- m %>% dplyr::group_by_(.dots = groups) %>%
-      dplyr::summarise(y=horizontal[which(cor_minus_incor == max(cor_minus_incor))[1]],
-                       x=vertical[which(cor_minus_incor == max(cor_minus_incor))[1]])
-    ggplot(m, aes(x=vertical, y=horizontal, color=get(groups[[1]]), linetype=get(groups[[2]]))) +
+      dplyr::summarise(x=horizontal[which(cor_minus_incor == max(cor_minus_incor))[1]],
+                       y=vertical[which(cor_minus_incor == max(cor_minus_incor))[1]])
+    ggplot(m, aes(x=horizontal, y=vertical, color=get(groups[[1]]), linetype=get(groups[[2]]))) +
       geom_line() +
       geom_point(data=mg, aes(x=x, y=y, fill=get(groups[[1]])), shape=23, color='black', size=3, alpha=0.5) +
-      labs(x=y_label, y=x_label) +
+      labs(x=x_label, y=y_label) +
       theme_bw() + theme(legend.title=element_blank())
   }
   parametric_helper <- function(m, x_column_name) {
@@ -124,14 +124,15 @@ plot_fig1 <- function(m, groups=list('series', 'blowup'), hap='A', show_legend=T
     m <- m %>% arrange(horizontal)
     zero_pct <- data.frame(x=c(m$incorrect[1]), y=c(m$Overall[1]))
     full_pct <- data.frame(x=c(m$incorrect[nrow(m)]), y=c(m$Overall[nrow(m)]))
+    endpoints <- filter(m, (Pct == 0 | Pct == 100))
     ggplot(m) +
       geom_path(aes(x=incorrect, y=Overall, color=get(groups[[1]]), linetype=get(groups[[2]]))) +
       # optimal points
       geom_point(data=mg, aes(x=x, y=y, fill=get(groups[[1]])),
                  shape=23, color='black', size=3, alpha=0.5) +
       # 0 and 100% points
-      geom_point(data=rbind(zero_pct, full_pct), aes(x=x, y=y),
-                 shape=16, fill='black', color='black', size=3) +
+      geom_point(data=endpoints, aes(x=incorrect, y=Overall),
+                 shape=16, fill='black', color='black', size=2) +
       # labels for optimum points
       #geom_text_repel(data=mg, aes(x=x, y=y, label=paste0(pct, '%'), color=series),
       #                segment.color='black', point.padding=0.7,
@@ -427,8 +428,8 @@ m$Num <- m$Num / 1000
 
 plot_fig4(m, x_column_name='Num', x_label='Thousands of SNPs')
 
-pdf(file='fig4.pdf', onefile=F, width=7, height=3)
-plot_fig4(m, x_column_name='Num', x_label='Thousands SNPs')
+pdf(file='fig4.pdf', onefile=F, width=8, height=3)
+plot_fig4(m, x_column_name='Num', x_label='Thousands of SNPs')
 dev.off()
 ```
 
@@ -446,11 +447,44 @@ plot_full <- function(sim, up, groups=list('series')) {
       labs(x=x_label, y=y_label) +
       theme_bw() + theme(legend.title=element_blank())
   }
+
+  parametric_helper <- function(m, x_column_name) {
+    m <- m %>% filter(Pct != 'Auto' && Pct != 'Major')
+    m$Pct <- as.numeric(m$Pct)
+    m$horizontal <- m[[x_column_name]]
+    
+    mg <- m %>% dplyr::group_by_(.dots = groups) %>%
+      dplyr::summarise(y=Overall[which(cor_minus_incor == max(cor_minus_incor))[1]],
+                       x=incorrect[which(cor_minus_incor == max(cor_minus_incor))[1]],
+                       pct=horizontal[which(cor_minus_incor == max(cor_minus_incor))[1]])
+    m <- m %>% arrange(horizontal)
+    zero_pct <- data.frame(x=c(m$incorrect[1]), y=c(m$Overall[1]))
+    full_pct <- data.frame(x=c(m$incorrect[nrow(m)]), y=c(m$Overall[nrow(m)]))
+    endpoints <- filter(m, (Pct == 0 | Pct == 100))
+    ggplot(m) +
+      geom_path(aes(x=incorrect, y=Overall, color=get(groups[[1]]))) +
+      # optimal points
+      geom_point(data=mg, aes(x=x, y=y, fill=get(groups[[1]])),
+                 shape=23, color='black', size=3, alpha=0.5) +
+      # 0 and 100% points
+      geom_point(data=endpoints, aes(x=incorrect, y=Overall),
+                 shape=16, fill='black', color='black', size=2) +
+      # labels for optimum points
+      #geom_text_repel(data=mg, aes(x=x, y=y, label=paste0(pct, '%'), color=series),
+      #                segment.color='black', point.padding=0.7,
+      #                min.segment.length = unit(0, 'lines')) +
+      # labels for 0/100% points
+      #geom_text_repel(data=zero_pct, aes(x=x, y=y, label='0%')) +
+      #geom_text_repel(data=full_pct, aes(x=x, y=y, label='100%')) +
+      labs(x='% reads incorrect', y='% reads correct') +
+      theme_bw() + theme(legend.title=element_blank())
+  }
   
   unique_perfect <- function(m) {
     m$Unique <- m$Unique / 1000000000
     m$Perfect <- m$Perfect / 1000000000
     auto <- m %>% filter(Pct == 'Auto')
+    
     m <- m %>% filter(Pct != 'Auto')
     m$Pct <- as.numeric(as.character(m$Pct))
     m$param <- m[['Pct']]
@@ -460,10 +494,18 @@ plot_full <- function(sim, up, groups=list('series')) {
     m <- m %>% arrange(param)
   
     ggplot(m) +
-        geom_path(aes(x=Unique, y=Perfect)) +
-        geom_point(data=auto, aes(x=Unique, y=Perfect), shape=23, color='black', size=3, alpha=0.5) +
+        geom_path(aes(x=Unique, y=Perfect, color=get(groups[[1]]))) +
+        geom_point(data=auto, aes(x=Unique, y=Perfect, fill=get(groups[[1]])), shape=23, color='black', size=3, alpha=0.5) +
         labs(x='Unique Mappings (Billions)', y='Perfect Mappings (Billions)') +
         theme_bw() + theme(legend.title=element_blank())
+    
+    ggplot(m) +
+      geom_path(aes(x=Unique, y=Perfect, color=get(groups[[1]]))) +
+      # optimal points
+      geom_point(data=auto, aes(x=Unique, y=Perfect, fill=get(groups[[1]])),
+                 shape=23, color='black', size=3, alpha=0.5) +
+      labs(x='Unique Mappings (Billions)', y='Perfect Mappings (Billions)') +
+      theme_bw() + theme(legend.title=element_blank())
   }
   
   sim$horizontal <- sim[['Pct']]  # trick so I can use "varticle" bareword below
@@ -471,10 +513,11 @@ plot_full <- function(sim, up, groups=list('series')) {
   sim <- sim %>% filter(Hap == 'A')
   
   p_ra <- curve_helper(sim, 'Pct', '% SNPs', 'Aligned', '% reads aligned')
-  p_ca <- curve_helper(sim, 'Pct', '% SNPs', 'Correct', '% alignments correct') 
+  p_ca <- curve_helper(sim, 'Pct', '% SNPs', 'Correct', '% alignments correct')
+  p_ci <- parametric_helper(sim, 'Pct')
   
   p_up = unique_perfect(up)
-  grid_arrange_shared_legend(T, 2, 3, p_ra, p_ca, p_up, p_up)
+  grid_arrange_shared_legend(T, 2, 4, p_ra, p_ca, p_ci, p_up, p_up, p_up)
 }
 ```
 
@@ -490,19 +533,44 @@ read_unique_perf  <- function (fn) {
 ```{r fig5}
 sim <- read_forge('../results/full_genome/popcov_blowup_sim.tsv', 'Population coverage', 'Blowup Avoid')
 up <- read_unique_perf('../results/full_genome/unique_perfect_vars.tsv')
+up$series <- 'Population coverage'
+up[which(up$Pct == 'Auto'),]$series = 'Auto'
 
 # TODO
-if(F) {
 plot_full(sim, up)
 
 pdf(file='fig5.pdf', onefile=F)
 plot_full(sim, up)
 dev.off()
+```
+
+```{r read_dir}
+read_dir  <- function (dir_name, pct) {
+  filenames <- list.files(dir_name, pattern="*.csv", full.names=TRUE)
+  filenames <- c("/Users/jacobpritt/Genomics/vis-experiments/results/allele_bias/threshold25_vars0/ref_ratios_1.csv")
+  results <- data.frame()
+  for (name in filenames) {
+    con <- file(name)
+    open(con)
+    line <- readLines(con, n=1, warn=FALSE)
+    l = as.numeric(unlist(strsplit(line, split=",")))
+    results <- rbind(results, data.frame(matrix(unlist(l), ncol=1)))
+    close(con)
+  }
+  results
 }
 ```
 
-
-
+```{r fig6}
+if (F) {
+  threshold <- "35"
+  pcts <- c("0", "2", "4", "6", "8", "10", "15", "20", "30", "40", "50", "60", "70", "_auto")
+  for (pct in pcts) {
+    res <- read_dir('/Users/jacobpritt/Genomics/vis-experiments/results/allele_bias/threshold25_vars0')
+    res$Pct <- pct
+  }
+}
+```
 
 
 ##################
