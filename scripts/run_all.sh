@@ -45,8 +45,6 @@ rm -f ${PREFIX}.strat_region.tsv
 printf "Pct\tRegion\tTotal\tHap\tAligned\tCorrect\tOverall\n" > ${PREFIX}.strat_region.tsv
 sbatch $SCRIPT_HOME/build.sbatch --export=MODE,LEN,NAME,PREFIX
 
-exit
-
 export MODE=amb_blowup100_max15
 export PREFIX=chr9_all_${MODE}
 rm -f ${PREFIX}.tsv

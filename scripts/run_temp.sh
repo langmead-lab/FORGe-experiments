@@ -25,7 +25,6 @@ printf "Pct\tDelSNPs\tTotal\tHap\tAligned\tCorrect\tOverall\n" > ${PREFIX}.strat
 rm -f ${PREFIX}.strat_region.tsv
 printf "Pct\tRegion\tTotal\tHap\tAligned\tCorrect\tOverall\n" > ${PREFIX}.strat_region.tsv
 sbatch $SCRIPT_HOME/build.sbatch --export=MODE,LEN,NAME,PREFIX
-#sbatch $SCRIPT_HOME/build_lrgmem.sbatch --export=MODE
 
 export MODE=amb_blowup100_max15
 export PREFIX=chr9_all_${MODE}
@@ -39,6 +38,5 @@ rm -f ${PREFIX}.strat_snp.tsv
 printf "Pct\tDelSNPs\tTotal\tHap\tAligned\tCorrect\tOverall\n" > ${PREFIX}.strat_del.tsv
 rm -f ${PREFIX}.strat_region.tsv
 printf "Pct\tRegion\tTotal\tHap\tAligned\tCorrect\tOverall\n" > ${PREFIX}.strat_region.tsv
-sbatch $SCRIPT_HOME/build.sbatch --export=MODE=$MODE,LEN=$LEN,NAME=$NAME,PREFIX=$PREFIX
-#sbatch $SCRIPT_HOME/build_lrgmem.sbatch --export=MODE,LEN,NAME,PREFIX
+sbatch $SCRIPT_HOME/build.sbatch --export=MODE,LEN,NAME,PREFIX
 

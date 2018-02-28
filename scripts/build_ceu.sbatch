@@ -1,10 +1,10 @@
 #!/bin/bash
-#SBATCH --partition=shared
+#SBATCH --partition=lrgmem
 #SBATCH --time=24:0:0
 #SBATCH --nodes=1
-#SBATCH --mem=16G
+#SBATCH --mem=100G
 #SBATCH --ntasks=1
-#SBATCH --array=0,2,4,6,8,10,15,20,30,40,50,60,70,80,90,100
+#SBATCH --array=100
 
 # Pass in argument MODE=[popcov | popcov_blowup | amb | amb_blowup]
 
@@ -13,12 +13,12 @@ export VIS_HOME=/home-3/mpritt4@jhu.edu/work/jacob/vis
 export SCRIPT_HOME=/home-3/mpritt4@jhu.edu/work/jacob/vis-experiments/scripts
 
 export PCT=$SLURM_ARRAY_TASK_ID
-#if [ $PCT = 0 ]; then
-#    $SCRIPT_HOME/testMem.py $VIS_HOME/software/hisat2/hisat2-build ../chr9.fa hisat_indexes/${MODE}${PCT}
-#else
-#    $VIS_HOME/src/gen_hisat_snps.py --snps ceu_snps.1ksnp --out hisat_snps/${MODE}${PCT}.txt --sorted-snps ordered_${MODE}.txt --pct $PCT
-#    $SCRIPT_HOME/testMem.py $VIS_HOME/software/hisat2/hisat2-build --snp hisat_snps/${MODE}${PCT}.txt ../chr9.fa hisat_indexes/${MODE}${PCT}
-#fi
+if [ $PCT = 0 ]; then
+    $SCRIPT_HOME/testMem.py $VIS_HOME/software/hisat2/hisat2-build ../chr9.fa hisat_indexes/${MODE}${PCT}
+else
+    $VIS_HOME/src/gen_hisat_snps.py --snps ceu_snps.1ksnp --out hisat_snps/${MODE}${PCT}.txt --sorted-snps ordered_${MODE}.txt --pct $PCT
+    $VIS_HOME/software/hisat2/hisat2-build --snp hisat_snps/${MODE}${PCT}.txt ../chr9.fa hisat_indexes/${MODE}${PCT}
+fi
 
 export LEN=100
 export NAME=NA12878

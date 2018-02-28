@@ -12,6 +12,20 @@ mkdir -p aligned/$NAME
 export LEN=100
 export NAME=NA12878
 
+export MODE=popcov
+export PREFIX=chr9_ceu_${MODE}_l${LEN}
+rm -f ${PREFIX}.tsv
+printf "Pct\tHap\tAligned\tCorrect\tOverall\n" > ${PREFIX}.tsv
+rm -f ${PREFIX}.strat_snp.tsv
+printf "Pct\tSNPs\tHap\tAligned\tCorrect\tOverall\n" > ${PREFIX}.strat_snp.tsv
+rm -f ${PREFIX}.strat_rare.tsv
+printf "Pct\tRareSNPs\tHap\tAligned\tCorrect\tOverall\n" > ${PREFIX}.strat_rare.tsv
+rm -f ${PREFIX}.strat_snp.tsv
+printf "Pct\tDelSNPs\tHap\tAligned\tCorrect\tOverall\n" > ${PREFIX}.strat_del.tsv
+sbatch $SCRIPT_HOME/build_ceu.sbatch --export=MODE,LEN,NAME,PREFIX
+
+exit
+
 export MODE=amb
 export PREFIX=chr9_ceu_${MODE}_l${LEN}
 rm -f ${PREFIX}.tsv
@@ -38,17 +52,6 @@ sbatch $SCRIPT_HOME/build_ceu.sbatch --export=MODE,LEN,NAME,PREFIX
 
 exit
 
-export MODE=popcov
-export PREFIX=chr9_ceu_${MODE}_l${LEN}
-rm -f ${PREFIX}.tsv
-printf "Pct\tHap\tAligned\tCorrect\tOverall\n" > ${PREFIX}.tsv
-rm -f ${PREFIX}.strat_snp.tsv
-printf "Pct\tSNPs\tHap\tAligned\tCorrect\tOverall\n" > ${PREFIX}.strat_snp.tsv
-rm -f ${PREFIX}.strat_rare.tsv
-printf "Pct\tRareSNPs\tHap\tAligned\tCorrect\tOverall\n" > ${PREFIX}.strat_rare.tsv
-rm -f ${PREFIX}.strat_snp.tsv
-printf "Pct\tDelSNPs\tHap\tAligned\tCorrect\tOverall\n" > ${PREFIX}.strat_del.tsv
-sbatch $SCRIPT_HOME/build_ceu.sbatch --export=MODE,LEN,NAME,PREFIX
 
 export MODE=popcov_blowup
 export PREFIX=chr9_ceu_${MODE}_l${LEN}
