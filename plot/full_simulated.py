@@ -54,6 +54,8 @@ def findOptPoint(correct, incorrect):
 
     # correct - incorrect
     score = [correct[i] - incorrect[i] for i in range(num)]
+    print(score)
+
 
     max_id = 0
     for i in range(1,num):
