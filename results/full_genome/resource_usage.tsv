@@ -3,19 +3,23 @@
 Pct	FORGe	Build	Align	Total
 0	0	58	13	71
 8	110	229	19	358
+10	100+5	223	26	354
 
 # Peak mem usage in GBs
 Pct	FORGe	Build	Align
 0	0	5.4	4.4
 8	155.0	165.3	6.5
+10	155.0	167.1	6.7
 
 ## SNPs only
 # Time usage in minutes
 Pct	FORGe	Build	Align	Total
 0	0	58	13	71
 8	105	180	21	307
+10	?+5	182
 
 # Peak mem usage in GBs
 Pct	FORGe	Build	Align
 0	0	5.4	4.4
 8	149.0	165.2	6.3
+10		166.1

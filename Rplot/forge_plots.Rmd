@@ -131,8 +131,11 @@ plot_fig1 <- function(m, groups=list('series', 'blowup'), hap='A', show_legend=T
       geom_point(data=mg, aes(x=x, y=y, fill=get(groups[[1]])),
                  shape=23, color='black', size=3, alpha=0.5) +
       # 0 and 100% points
-      geom_point(data=rbind(zero_pct,full_pct), aes(x=incorrect, y=Overall),
-                 shape=16, fill='black', color='black', size=2) +
+      geom_point(data=zero_pct, aes(x=incorrect, y=Overall),
+                 shape=16, fill='black', color='black', size=3) +
+      geom_point(data=full_pct, aes(x=incorrect, y=Overall),
+                 shape=15, fill='black', color='black', size=3) +
+      #coord_cartesian(ylim=c(91.1,91.7), xlim = c(5.34, 5.49)) +
       # labels for optimum points
       geom_text_repel(data=filter(mg, (pct != 'Auto' && pct != 'Major')), aes(x=x, y=y, label=paste0(pct, '%'), color=series),
                       segment.color='black', point.padding=0.7,
@@ -150,13 +153,13 @@ plot_fig1 <- function(m, groups=list('series', 'blowup'), hap='A', show_legend=T
   # TODO: add the haplotypes
   m <- m %>% filter(Hap == hap)
   
-  p_ra <- curve_helper(m, 'Pct', '% SNPs', 'Aligned', '% reads aligned')
-  p_ca <- curve_helper(m, 'Pct', '% SNPs', 'Correct', '% alignments correct')
+  p_ra <- curve_helper(m, 'Pct', '% SNVs', 'Aligned', '% reads aligned')
+  p_ca <- curve_helper(m, 'Pct', '% SNVs', 'Correct', '% alignments correct')
   p_ci <- parametric_helper(m, 'Pct')
   
   p_ra_mem <- curve_helper(m, 'AlignMem', 'Alignment Mem (MB)', 'Aligned', '% reads aligned')
   p_ca_mem <- curve_helper(m, 'AlignMem', 'Alignment Mem (MB)', 'Correct', '% alignments correct')
-  p_mem <- curve_helper_mem(m, 'Pct', '% SNPs', 'AlignMem', 'Alignment Mem (MB)')
+  p_mem <- curve_helper_mem(m, 'Pct', '% SNVs', 'AlignMem', 'Alignment Mem (MB)')
   grid_arrange_shared_legend(show_legend, 2, 1, p_ra, p_ca, p_ci, p_ra_mem, p_ca_mem, p_mem)
 }
 ```
@@ -186,7 +189,7 @@ m <- rbind(m, auto, major)
 #plot_forge(m, x_column_name='AlignMem', hap='A', x_label='Alignment Mem (MB)', plot_parametric=F)
 plot_fig1(m)
 
-pdf(file='fig1.pdf', onefile=F)
+pdf(file='fig1.pdf', onefile=F, width=9, height=6)
 plot_fig1(m)
 dev.off()
 ```
@@ -208,7 +211,7 @@ m <- rbind(read_forge_join('../results/chr9_all_bowtie_popcov_l25.tsv',
 #plot_forge(m, x_column_name='AlignMem', hap='A', x_label='Alignment Mem (MB)', plot_parametric=F)
 plot_fig1(m)
 
-pdf(file='fig2.pdf', onefile=F)
+pdf(file='fig2.pdf', onefile=F, width=9, height=6)
 plot_fig1(m)
 dev.off()
 ```
@@ -220,17 +223,17 @@ dev.off()
 grid_arrange_multi_legend <- function(num_rows, ...) {
     plots <- list(...)
       
-    g1 <- ggplotGrob(plots[[1]] + theme(legend.position="left"))$grobs
+    g1 <- ggplotGrob(plots[[1]] + theme(legend.position="left", legend.justification = c("left", "top"), legend.key.size = unit(2, 'lines')))$grobs
     legend1 <- g1[[which(sapply(g1, function(x) x$name) == "guide-box")]]
     plots_arg1 <- lapply(plots[1:3], function(x)  x + theme(legend.position="none"))
     plots_arg1$nrow <- 1
     
-    g2 <- ggplotGrob(plots[[4]] + theme(legend.position="left"))$grobs
+    g2 <- ggplotGrob(plots[[4]] + theme(legend.position="left", legend.justification = c("left", "top"), legend.key.size = unit(2, 'lines')))$grobs
     legend2 <- g2[[which(sapply(g2, function(x) x$name) == "guide-box")]]
     plots_arg2 <- lapply(plots[4:6], function(x)  x + theme(legend.position="none"))
     plots_arg2$nrow <- 1
     
-    g3 <- ggplotGrob(plots[[7]] + theme(legend.position="left"))$grobs
+    g3 <- ggplotGrob(plots[[7]] + theme(legend.position="left", legend.justification = c("left", "top"), legend.key.size = unit(2, 'lines')))$grobs
     legend3 <- g3[[which(sapply(g3, function(x) x$name) == "guide-box")]]
     plots_arg3 <- lapply(plots[7:9], function(x)  x + theme(legend.position="none"))
     plots_arg3$nrow <- 1
@@ -285,10 +288,12 @@ plot_fig_strat <- function(m1, m2, m3, groups=list('series', 'strat'), hap='A', 
     full_pct <- filter(m, Pct == 100)
     endpoints <- filter(m, (Pct == 0 | Pct == 100))
     pl <- ggplot(m) +
-      geom_path(aes(x=incorrect, y=Overall, color=get(groups[[2]]))) +
       # 0 and 100% points
-      geom_point(data=rbind(zero_pct,full_pct), aes(x=incorrect, y=Overall),
-                 shape=16, fill='black', color='black', size=2) +
+      geom_point(data=zero_pct, aes(x=incorrect, y=Overall),
+                 shape=16, fill='black', color='black', size=3) +
+      geom_point(data=full_pct, aes(x=incorrect, y=Overall),
+                 shape=15, fill='black', color='black', size=3) +
+      geom_path(aes(x=incorrect, y=Overall, color=get(groups[[2]]))) +
       # optimal points
       geom_point(data=mg, aes(x=x, y=y, fill=get(groups[[2]])),
                  shape=23, color='black', size=3, alpha=0.5) +
@@ -297,12 +302,12 @@ plot_fig_strat <- function(m1, m2, m3, groups=list('series', 'strat'), hap='A', 
                       segment.color='black', color='black', point.padding=0.7,
                       min.segment.length = unit(0, 'lines')) +
       # labels for 0/100% points
-      geom_text_repel(data=zero_pct, aes(x=incorrect, y=Overall, label='0%')) +
-      geom_text_repel(data=full_pct, aes(x=incorrect, y=Overall, label='100%')) +
+      #geom_text_repel(data=zero_pct, aes(x=incorrect, y=Overall, label='0%')) +
+      #geom_text_repel(data=full_pct, aes(x=incorrect, y=Overall, label='100%')) +
       labs(x='% reads incorrect', y='% reads correct') +
       theme_bw() + theme(legend.title=element_blank(), axis.text.x = element_text(angle = 30, hjust = 1))
     if(snps) {
-        pl + coord_cartesian(xlim = c(0.00125, 0.0101), ylim=c(0.85, 0.98))
+        pl + coord_cartesian(xlim = c(0.125, 1.01), ylim=c(85, 98))
     } else {
         pl
     }
@@ -310,18 +315,18 @@ plot_fig_strat <- function(m1, m2, m3, groups=list('series', 'strat'), hap='A', 
   
   # TODO: add the haplotypes
   m1 <- m1 %>% filter(Hap == hap)
-  p_11 <- curve_helper(m1, 'Pct', '% SNPs', 'Aligned', '% reads aligned')
-  p_12 <- curve_helper(m1, 'Pct', '% SNPs', 'Correct', '% alignments correct')
+  p_11 <- curve_helper(m1, 'Pct', '% SNVs', 'Aligned', '% reads aligned')
+  p_12 <- curve_helper(m1, 'Pct', '% SNVs', 'Correct', '% alignments correct')
   p_13 <- parametric_helper(m1, 'Pct', snps=T)
   
   m2 <- m2 %>% filter(Hap == hap)
-  p_21 <- curve_helper(m2, 'Pct', '% SNPs', 'Aligned', '% reads aligned')
-  p_22 <- curve_helper(m2, 'Pct', '% SNPs', 'Correct', '% alignments correct')
+  p_21 <- curve_helper(m2, 'Pct', '% SNVs', 'Aligned', '% reads aligned')
+  p_22 <- curve_helper(m2, 'Pct', '% SNVs', 'Correct', '% alignments correct')
   p_23 <- parametric_helper(m2, 'Pct')
   
   m3 <- m3 %>% filter(Hap == hap)
-  p_31 <- curve_helper(m3, 'Pct', '% SNPs', 'Aligned', '% reads aligned')
-  p_32 <- curve_helper(m3, 'Pct', '% SNPs', 'Correct', '% alignments correct')
+  p_31 <- curve_helper(m3, 'Pct', '% SNVs', 'Aligned', '% reads aligned')
+  p_32 <- curve_helper(m3, 'Pct', '% SNVs', 'Correct', '% alignments correct')
   p_33 <- parametric_helper(m3, 'Pct')
   
   grid_arrange_multi_legend(3, p_11, p_12, p_13, p_21, p_22, p_23, p_31, p_32, p_33)
@@ -332,18 +337,34 @@ plot_fig_strat <- function(m1, m2, m3, groups=list('series', 'strat'), hap='A', 
 m1 <- rbind(read_forge('../results/chr9_all_popcov_safe.strat_snp.tsv', 'Population coverage', 'Standard'))
 m1 <- rename(m1, strat=SNPs)
 m1 <- filter(m1, strat < 4)
-m1$strat <- paste(as.character(m1$strat), " SNPs", sep="")
+m1$Aligned <- m1$Aligned * 100
+m1$Correct <- m1$Correct * 100
+m1$Overall <- m1$Overall * 100
+m1$incorrect <- m1$incorrect * 100
+m1$strat <- paste0(as.character(m1$strat), " SNVs", '\n', "(n=", m1$Total, ")")
 
-m2 <- rbind(read_forge('../results/chr9_all_popcov_safe.strat_rare.tsv', 'Population coverage', 'Standard'))
+#m2 <- rbind(read_forge('../results/chr9_all_popcov_safe.strat_rare.tsv', 'Population coverage', 'Standard'))
+m2 <- rbind(read_forge('../results/strat_all/chr9_all_popcov_safe.strat_rare.tsv', 'Population coverage', 'Standard'))
 m2 <- rename(m2, strat=RareSNPs)
-m2$strat[m2$strat == 0] <- "1 common SNP"
-m2$strat[m2$strat == 1] <- "1 rare SNP"
+m2$Aligned <- m2$Aligned * 100
+m2$Correct <- m2$Correct * 100
+m2$Overall <- m2$Overall * 100
+m2$incorrect <- m2$incorrect * 100
+m2$strat[m2$strat == 0] <- "1 common SNV"
+m2$strat[m2$strat == 1] <- "1 rare SNV"
+m2$strat <- paste0(m2$strat, '\n', "(n=", m2$Total, ")")
 
-m3 <- rbind(read_forge('../results/chr9_all_popcov.strat_region.tsv', 'Population coverage', 'Standard'))
+#m3 <- rbind(read_forge('../results/chr9_all_popcov.strat_region.tsv', 'Population coverage', 'Standard'))
+m3 <- rbind(read_forge('../results/strat_all/chr9_all_popcov_safe.strat_region.tsv', 'Population coverage', 'Standard'))
 m3 <- rename(m3, strat=Region)
 m3 <- filter(m3, strat != 'NonConf')
+m3$Aligned <- m3$Aligned * 100
+m3$Correct <- m3$Correct * 100
+m3$Overall <- m3$Overall * 100
+m3$incorrect <- m3$incorrect * 100
 m3$strat <- as.character(m3$strat)
 m3$strat[m3$strat == "Total"] <- "All Reads"
+m3$strat <- paste0(m3$strat, '\n', "(n=", m3$Total, ")")
 
 plot_fig_strat(m1, m2, m3)
 
@@ -353,7 +374,7 @@ dev.off()
 ```
 
 ```{r chr19_sim}
-plot_fig4 <- function(m, groups=list('series', 'blowup'), x_column_name='Pct', hap='A', plot_parametric=T, x_label='% SNPs', show_legend=T) {
+plot_fig4 <- function(m, groups=list('series', 'blowup'), x_column_name='Pct', hap='A', plot_parametric=T, x_label='% SNVs', show_legend=T) {
   m$horizontal <- m[[x_column_name]]  # trick so I can use "varticle" bareword below
   # TODO: add the haplotypes
   m <- m %>% filter(Hap == hap)
@@ -411,7 +432,7 @@ plot_fig4 <- function(m, groups=list('series', 'blowup'), x_column_name='Pct', h
   if(plot_parametric) {
     p_ci <- parametric_helper(m)
   } else {
-    p_ci <- curve_helper_mem(m, 'Pct', '% SNPs')
+    p_ci <- curve_helper_mem(m, 'Pct', '% SNVs')
   }
   grid_arrange_shared_legend(show_legend, 1, 1, p_ra, p_ca, p_ci)
 }
@@ -428,10 +449,10 @@ m <- rbind(read_forge_join('../results/chr9_all_popcov_l100.tsv', '../results/ch
                       'Hybrid', 'CEU'))
 m$Num <- m$Num / 1000
 
-plot_fig4(m, x_column_name='Num', x_label='Thousands of SNPs')
+plot_fig4(m, x_column_name='Num', x_label='Thousands of SNVs')
 
 pdf(file='fig4.pdf', onefile=F, width=8, height=3)
-plot_fig4(m, x_column_name='Num', x_label='Thousands of SNPs')
+plot_fig4(m, x_column_name='Num', x_label='Thousands of SNVs')
 dev.off()
 ```
 
@@ -488,66 +509,88 @@ plot_full <- function(sim, up, bias, groups=list('series')) {
                        x=incorrect[which(cor_minus_incor == max(cor_minus_incor))[1]],
                        pct=horizontal[which(cor_minus_incor == max(cor_minus_incor))[1]])
     m <- m %>% arrange(horizontal)
-    zero_pct <- data.frame(x=c(m$incorrect[1]), y=c(m$Overall[1]))
-    full_pct <- data.frame(x=c(m$incorrect[nrow(m)]), y=c(m$Overall[nrow(m)]))
-    endpoints <- filter(m, (Pct == 0 | Pct == 80))
+    zero_pct <- filter(m, Pct == 0)[1,]
+    full_pct <- filter(m, Pct == 80)[1,]
     ggplot(m) +
       geom_path(aes(x=incorrect, y=Overall, color=get(groups[[1]]))) +
       # optimal points
       geom_point(data=mg, aes(x=x, y=y, fill=get(groups[[1]])),
                  shape=23, color='black', size=3, alpha=0.5) +
-      # 0 and 100% points
-      geom_point(data=endpoints, aes(x=incorrect, y=Overall),
-                 shape=16, fill='black', color='black', size=2) +
+      # 0 and 80% points
+      geom_point(data=zero_pct, aes(x=incorrect, y=Overall),
+                 shape=16, fill='black', color='black', size=3) +
+      geom_point(data=full_pct, aes(x=incorrect, y=Overall),
+                 shape=15, fill='black', color='black', size=3) +
       # labels for optimum points
       geom_text_repel(data=mg, aes(x=x, y=y, label=paste0(pct, '%'), color=series),
                       segment.color='black', point.padding=0.7,
                       min.segment.length = unit(0, 'lines')) +
-      # labels for 0/100% points
-      geom_text_repel(data=zero_pct, aes(x=x, y=y, label='0%')) +
-      geom_text_repel(data=full_pct, aes(x=x, y=y, label='80%')) +
+      geom_text_repel(data=filter(mg, (pct == 'Auto' || pct == 'Major')), aes(x=x, y=y, label=pct, color=series),
+                      segment.color='black', point.padding=0.7,
+                      min.segment.length = unit(0, 'lines')) +
+      # labels for 0/80% points
+      geom_text_repel(data=zero_pct, aes(x=incorrect, y=Overall, label='0%')) +
+      geom_text_repel(data=full_pct, aes(x=incorrect, y=Overall, label='80%')) +
       labs(x='% reads incorrect', y='% reads correct') +
       theme_bw() + theme(legend.title=element_blank())
   }
   
-  unique_perfect <- function(m) {
-    m$Unique <- m$Unique / 1000000000
-    m$Perfect <- m$Perfect / 1000000000
-    auto <- m %>% filter(Pct == 'Auto')
+  unique_perfect <- function(up) {
+    up$horizontal <- up[['Pct']]
+    up$series <- factor(up$series, levels=c("Population Coverage", "HISAT2 Auto"))
+    mg <- up %>% dplyr::group_by(series) %>%
+      dplyr::summarise(y=Perfect[which(u_plus_p == max(u_plus_p))[1]],
+                       x=Unique[which(u_plus_p == max(u_plus_p))[1]],
+                       pct=horizontal[which(u_plus_p == max(u_plus_p))[1]])
+    #up$series <- factor(up$series, levels=c("Population Coverage", "Auto"))
     
-    m <- m %>% filter(Pct != 'Auto')
-    m$Pct <- as.numeric(as.character(m$Pct))
-    m$param <- m[['Pct']]
-    m$horizontal <- m[['Unique']]
-    m$vertical <- m[['Perfect']]
+    #up$series <- factor(up$series, levels=c("Population Coverage"))
+    mg$pct <- paste0(mg$pct, '%')
+    mg$pct[mg$pct == 'Auto%'] <- NA
     
-    m <- m %>% arrange(param)
-  
-    ggplot(m) +
-        geom_path(aes(x=Unique, y=Perfect, color=get(groups[[1]]))) +
-        geom_point(data=auto, aes(x=Unique, y=Perfect, fill=get(groups[[1]])), shape=23, color='black', size=3, alpha=0.5) +
-        labs(x='Unique Mappings (Billions)', y='Perfect Mappings (Billions)') +
-        theme_bw() + theme(legend.title=element_blank())
+    up <- up %>% filter(Pct != 'Auto')
+    up$Pct <- as.numeric(as.character(up$Pct))
     
-    ggplot(m) +
+    up <- up %>% arrange(Pct)
+    zero_pct <- filter(up, Pct == 0)[1,]
+    full_pct <- filter(up, Pct == 70)[1,]
+    horizontal <- as.character(up$Pct)
+    
+    ggplot(up) +
       geom_path(aes(x=Unique, y=Perfect, color=get(groups[[1]]))) +
       # optimal points
-      geom_point(data=auto, aes(x=Unique, y=Perfect, fill=get(groups[[1]])),
+      geom_point(data=mg, aes(x=x, y=y, fill=get(groups[[1]])),
                  shape=23, color='black', size=3, alpha=0.5) +
+      # 0 and 80% points
+      geom_point(data=zero_pct, aes(x=Unique, y=Perfect),
+                 shape=16, fill='black', color='black', size=3) +
+      geom_point(data=full_pct, aes(x=Unique, y=Perfect),
+                 shape=15, fill='black', color='black', size=3) +
+      # labels for optimum points
+      geom_text_repel(data=mg, aes(x=x, y=y, label=pct, color=series),
+                      segment.color='black', point.padding=0.7,
+                      min.segment.length = unit(0, 'lines')) +
+      # labels for 0/80% points
+      geom_text_repel(data=zero_pct, aes(x=Unique, y=Perfect, label='0%')) +
+      geom_text_repel(data=full_pct, aes(x=Unique, y=Perfect, label='70%')) +
       labs(x='Unique Mappings (Billions)', y='Perfect Mappings (Billions)') +
       theme_bw() + theme(legend.title=element_blank())
   }
   
   plot_bias <- function(m) {
     m <- m %>% filter(Pct != '_auto')
-    m$Pct <- as.numeric(m$Pct)
+    #m$Pct <- as.numeric(m$Pct)
+    #m$horizontal <- as.numeric(m[['Pct']])
     m$horizontal <- m[['Pct']]
     m$vertical <- m[['Bias']]
-    m <- m %>% arrange(horizontal)
+    #m <- m %>% arrange(horizontal)
+    #m$horizontal <- as.character(m$horizontal)
+    #m$horizontal <- factor(m$horizontal, levels=m$Pct[as.character(order(as.numeric(m$Pct)))])
+    m$horizontal <- factor(m$horizontal, levels=c("0", "2", "4", "6", "8", "10", "15", "20", "30", "40", "50", "60", "70"))
     ggplot(m) +
-      geom_boxplot(aes(x=horizontal, y=vertical, group=cut_width(horizontal, 1))) +
+      geom_boxplot(aes(x=horizontal, y=vertical, group=Pct), outlier.color="NA") +
       labs(x='% Variants', y='Reference Bias') +
-      #scale_y_continuous(limits=c(30,70)) +
+      coord_cartesian(ylim=c(0.25,0.75)) +
       theme_bw() + theme(legend.title=element_blank())
   }
   
@@ -555,14 +598,15 @@ plot_full <- function(sim, up, bias, groups=list('series')) {
   # TODO: add the haplotypes
   sim <- sim %>% filter(Hap == 'A')
   
-  p_ra <- curve_helper(sim, 'Pct', '% SNPs', 'Aligned', '% reads aligned')
-  p_ca <- curve_helper(sim, 'Pct', '% SNPs', 'Correct', '% alignments correct')
+  p_ra <- curve_helper(sim, 'Pct', '% SNVs', 'Aligned', '% reads aligned')
+  p_ca <- curve_helper(sim, 'Pct', '% SNVs', 'Correct', '% alignments correct')
   p_ci <- parametric_helper(sim, 'Pct')
   
   p_up = unique_perfect(up)
   
   p_bi <- plot_bias(bias)
   lay <- rbind(c(1,2,3),c(4,5,5))
+  #grid_arrange_custom_layout(lay, 4, p_up, p_up, p_up, p_up, p_bi)
   grid_arrange_custom_layout(lay, 4, p_ra, p_ca, p_ci, p_up, p_bi)
 }
 ```
@@ -570,8 +614,9 @@ plot_full <- function(sim, up, bias, groups=list('series')) {
 ```{r read_unique_perfect}
 read_unique_perf  <- function (fn) {
   tab <- read.csv(fn, sep='\t', comment.char='#')
-  tab$Unique <- tab$UniqueA + tab$UniqueB
-  tab$Perfect <- tab$PerfectA + tab$PerfectB
+  tab$Unique <- (tab$UniqueA + tab$UniqueB) / 1000000000
+  tab$Perfect <- (tab$PerfectA + tab$PerfectB) / 1000000000
+  tab$u_plus_p <- tab$Unique + tab$Perfect
   tab
 }
 ```
@@ -595,12 +640,17 @@ read_dir  <- function (dir_name, pct) {
 
 ```{r fig5}
 sim <- read_forge('../results/full_genome/popcov_blowup_sim.tsv', 'Population coverage', 'Blowup Avoid')
+#levels(sim$series) <- cbind(levels(sim$series), c("Auto"))
+sim$series <- as.character(sim$series)
+#sim$series <- factor(sim$series, levels=c("Population Coverage", "Auto"))
+
 up <- read_unique_perf('../results/full_genome/unique_perfect_vars.tsv')
 
-up$series <- 'Population coverage'
-up[which(up$Pct == 'Auto'),]$series = 'Auto'
+up$series = 'Population Coverage'
+up[which(up$Pct == 'Auto'),]$series = 'HISAT2 Auto'
 
-threshold <- "35"
+
+threshold <- "25"
 pcts <- c("0", "2", "4", "6", "8", "10", "20", "30", "40", "50", "60", "70", "_auto")
 bias = data.frame()
 for (pct in pcts) {
@@ -612,7 +662,7 @@ for (pct in pcts) {
 }
 
 plot_full(sim, up, bias)
-pdf(file='fig5.pdf', onefile=F)
+pdf(file='fig5.pdf', onefile=F, width=9, height=6)
 plot_full(sim, up, bias)
 dev.off()
 ```

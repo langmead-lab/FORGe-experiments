@@ -3,5 +3,5 @@
 # Aligned against major allele reference genome
 # Read length 100
 Pct	Hap	Aligned	Correct	Overall	AlignMem	BuildMem
-Major	A	96.762500	94.382607	91.326970	219.5	280.7
-Major	B	96.773010	94.395576	91.349440	219.5	280.7
+Major	A	98.829430	94.488767	93.382710	218.0	280.7
+Major	B	98.836700	94.481817	93.382710	217.9	280.7

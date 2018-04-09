@@ -1,0 +1,7 @@
+# Chr 9
+# All populations
+# SNPs chosen with HISAT2 auto pruning script
+# Read length 100
+Pct	Hap	Aligned	Correct	Overall	AlignMem	BuildMem
+NA12878	A	99.015400	94.575652	93.644460	292.0	6076
+NA12878	B	99.009760	94.568243	93.631790	291.9	6076

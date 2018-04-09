@@ -19,16 +19,6 @@ def run():
     finish()
 
     return
-    '''
-    max_mem = 0
-    while proc.poll() is None:
-        mem = resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss
-        print(mem)
-        if mem > max_mem:
-            max_mem = mem
-
-    print(max_mem)
-    '''
 
 thread = threading.Thread(target=run)
 thread.start()
