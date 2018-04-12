@@ -1,5 +1,7 @@
 
-FORGe software prerequisites (along with known-good versions):
+Follow these instructions to reproduce the experiments from the paper titled "FORGe: prioritizing variants for graph genomes."
+
+Software prerequisites, including versions that we used:
 
 * [`Python 2.7`](https://www.python.org)
 * [`mason` v0.1.2](http://www.seqan.de/apps/mason/)
@@ -42,7 +44,7 @@ sbatch erg/build.sbatch
 ./erg/align_all.sh
 ```
 
-To run full genome results, run the following. Simulated accuracies will be written to snps_accuracy.tsv and vars_accuracy.tsv with accompanying stratified results files. Unique/perfect counts will be written to the slurm output files, in the format '#unique #perfect #total'
+To run full genome results, run the following. Simulated accuracies will be written to `snps_accuracy.tsv` and `vars_accuracy.tsv` with accompanying stratified results files. Unique/perfect counts will be written to the slurm output files, in the format `#unique #perfect #total`
 
 ```
 cp vars_all.1ksnp $EXP_HOME/
