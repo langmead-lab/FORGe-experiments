@@ -1,6 +1,10 @@
 
-To run the FORGe experiments, you must have Mason and HISAT2 installed.
-Jellyfish should also be installed with python bindings.
+FORGe software prerequisites (along with known-good versions):
+
+* [`mason` v0.1.2](http://www.seqan.de/apps/mason/)
+* [`hisat2` v2.1.0](https://ccb.jhu.edu/software/hisat2/index.shtml)
+* [`jellyfish` v2.2.6](https://github.com/gmarcais/Jellyfish) with python bindings.
+
 Before running, modify the following path variables in `run_all.sh`, `simulate.sh`, `rank_snps.sh`, and `add_read_info.sh`
 
 * `EXP_HOME` - Experiment directory. Initially, `$EXP_HOME` should contain the following files:
@@ -11,7 +15,7 @@ Before running, modify the following path variables in `run_all.sh`, `simulate.s
 * `VIS_HOME` - FORGe src directory
 * `SCRIPT_HOME` - vis-experiments/scripts directory
 
-Variant files are included, extracted from the 1000 Genomes callset for the full genome with NA12878 and relatives excluded. These files are available in scripts/snps_all.1ksnp and scripts/vars_all.1ksnp.
+Variant files are included, extracted from the 1000 Genomes callset for the full genome with NA12878 and relatives excluded. These files are available in `scripts/snps_all.1ksnp` and `scripts/vars_all.1ksnp`.
 
 To run FORGe, build HISAT indexes, and align reads, execute
 
@@ -19,7 +23,7 @@ To run FORGe, build HISAT indexes, and align reads, execute
 ./run_all.sh
 ```
 
-This script will simulate reads from NA12878, parse SNPs and rank them with FORGe, generate HISAT indexes and align the simulated reads to them for various percentages of SNPs. The resulting accuracies will be written to files chr9_all_[RANK_METHOD]_l100.tsv with accompanying stratified results.
+This script will simulate reads from NA12878, parse SNPs and rank them with FORGe, generate HISAT indexes and align the simulated reads to them for various percentages of SNPs. The resulting accuracies will be written to files `chr9_all_[RANK_METHOD]_l100.tsv` with accompanying stratified results.
 
 To run the same pipeline for only CEU SNPs, execute:
 
