@@ -1,9 +1,12 @@
 
 FORGe software prerequisites (along with known-good versions):
 
+* [`Python 2.7`](https://www.python.org)
 * [`mason` v0.1.2](http://www.seqan.de/apps/mason/)
 * [`hisat2` v2.1.0](https://ccb.jhu.edu/software/hisat2/index.shtml)
 * [`jellyfish` v2.2.6](https://github.com/gmarcais/Jellyfish) with python bindings.
+
+Appropriate `hisat2` and `jellyfish` versions are available from [Bioconda](https://bioconda.github.io).
 
 Before running, modify the following path variables in `run_all.sh`, `simulate.sh`, `rank_snps.sh`, and `add_read_info.sh`
 
