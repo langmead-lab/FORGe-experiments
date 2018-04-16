@@ -11,6 +11,7 @@ library(dplyr)
 library(grid)
 library(gridExtra)
 library(cowplot)
+library(RColorBrewer)
 ```
 
 ```{r set_dir}
@@ -76,6 +77,8 @@ read_forge_join <- function (fn1, fn2, series, blowup) {
 
 ```{r chr9_hisat}
 plot_fig1 <- function(m, groups=list('series', 'blowup'), hap='A', show_legend=T) {
+  myColors <- brewer.pal(5, "Set1")
+  names(myColors) <- c('Population coverage', 'Hybrid', 'Personalized', 'HISAT2 Auto', 'Major Allele')
   
   curve_helper <- function(m, x_column_name, x_label, y_column_name, y_label) {
     # Remove HISAT2 Auto lines
@@ -92,6 +95,8 @@ plot_fig1 <- function(m, groups=list('series', 'blowup'), hap='A', show_legend=T
       geom_line() +
       geom_point(data=mg, aes(x=x, y=y, fill=get(groups[[1]])), shape=23, color='black', size=3, alpha=0.5) +
       labs(x=x_label, y=y_label) +
+      scale_color_manual(name='series', values=myColors, drop=F) +
+      scale_fill_manual(name='series', values=myColors, drop=F) +
       theme_bw() + theme(legend.title=element_blank())
   }
   curve_helper_mem <- function(m, x_column_name, x_label, y_column_name, y_label) {
@@ -111,6 +116,8 @@ plot_fig1 <- function(m, groups=list('series', 'blowup'), hap='A', show_legend=T
       geom_line() +
       geom_point(data=mg, aes(x=x, y=y, fill=get(groups[[1]])), shape=23, color='black', size=3, alpha=0.5) +
       labs(x=x_label, y=y_label) +
+      scale_color_manual(name='series', values=myColors, drop=F) +
+      scale_fill_manual(name='series', values=myColors, drop=F) +
       theme_bw() + theme(legend.title=element_blank())
   }
   parametric_helper <- function(m, x_column_name) {
@@ -147,6 +154,8 @@ plot_fig1 <- function(m, groups=list('series', 'blowup'), hap='A', show_legend=T
       geom_text_repel(data=zero_pct, aes(x=incorrect, y=Overall, label='0%')) +
       geom_text_repel(data=full_pct, aes(x=incorrect, y=Overall, label='100%')) +
       labs(x='% reads incorrect', y='% reads correct') +
+      scale_color_manual(name='series', values=myColors, drop=F) +
+      scale_fill_manual(name='series', values=myColors, drop=F) +
       theme_bw() + theme(legend.title=element_blank())
   }
   
@@ -184,7 +193,7 @@ auto$Num <- auto$Pct
 major <- read_forge('../results/chr9_major_ref.tsv', 'Major Allele', 'Standard')
 major$Num <- major$Pct
 
-indiv <- read_forge('../results/chr9_NA12878_ref.tsv', 'Individualized', 'Standard')
+indiv <- read_forge('../results/chr9_NA12878_ref.tsv', 'Personalized', 'Standard')
 indiv$Num <- indiv$Pct
 
 m <- rbind(m, auto, major, indiv)
@@ -211,7 +220,7 @@ m <- rbind(read_forge_join('../results/chr9_bowtie_popcov.tsv',
                            '../results/chr9_all_amb_blowup_mem_erg.tsv',
                            'Hybrid',  'Blowup avoid'))
 
-indiv <- read_forge('../results/chr9_NA12878_ref_erg.tsv', 'Individualized', 'Standard')
+indiv <- read_forge('../results/chr9_NA12878_ref_erg.tsv', 'Personalized', 'Standard')
 indiv$Num <- indiv$Pct
 
 m <- rbind(m, indiv)
@@ -262,6 +271,8 @@ grid_arrange_multi_legend <- function(num_rows, ...) {
 
 ```{r chr9_hisat_strat}
 plot_fig_strat <- function(m1, m2, m3, groups=list('series', 'strat'), hap='A', show_legend=T) {
+  myColors <- brewer.pal(5, "Set1")
+  names(myColors) <- levels(m1$strat)
   
   curve_helper <- function(m, x_column_name, x_label, y_column_name, y_label) {
     # Remove HISAT2 Auto lines
@@ -279,6 +290,8 @@ plot_fig_strat <- function(m1, m2, m3, groups=list('series', 'strat'), hap='A', 
       geom_line() +
       geom_point(data=mg, aes(x=x, y=y, fill=get(groups[[2]])), shape=23, color='black', size=3, alpha=0.5) +
       labs(x=x_label, y=y_label) +
+      scale_color_manual(name='strat', values=myColors, drop=F) +
+      scale_fill_manual(name='strat', values=myColors, drop=F) +
       theme_bw() + theme(legend.title=element_blank(), axis.text.x = element_text(angle = 30, hjust = 1))
   }
   parametric_helper <- function(m, x_column_name, snps=F) {
@@ -313,6 +326,8 @@ plot_fig_strat <- function(m1, m2, m3, groups=list('series', 'strat'), hap='A', 
       #geom_text_repel(data=zero_pct, aes(x=incorrect, y=Overall, label='0%')) +
       #geom_text_repel(data=full_pct, aes(x=incorrect, y=Overall, label='100%')) +
       labs(x='% reads incorrect', y='% reads correct') +
+      scale_color_manual(name='strat', values=myColors, drop=F) +
+      scale_fill_manual(name='strat', values=myColors, drop=F) +
       theme_bw() + theme(legend.title=element_blank(), axis.text.x = element_text(angle = 30, hjust = 1))
     if(snps) {
         pl + coord_cartesian(xlim = c(0.125, 1.25), ylim=c(90, 100))
@@ -381,7 +396,10 @@ dev.off()
 ```
 
 ```{r chr19_sim}
-plot_fig4 <- function(m, groups=list('series', 'blowup'), x_column_name='Pct', hap='A', plot_parametric=T, x_label='% SNVs', show_legend=T) {
+plot_fig4 <- function(m, groups=list('series', 'blowup'), x_column_name='Pct', hap='A', x_label='% SNVs', show_legend=T) {
+  myColors <- brewer.pal(5, "Set1")
+  names(myColors) <- c('Population coverage', 'Hybrid', 'Personalized', 'HISAT2 Auto', 'Major Allele')
+  
   # TODO: add the haplotypes
   m <- m %>% filter(Hap == hap)
   curve_helper <- function(m, y_column_name, y_label) {
@@ -400,6 +418,8 @@ plot_fig4 <- function(m, groups=list('series', 'blowup'), x_column_name='Pct', h
       labs(x=x_label, y=y_label) +
       #scale_x_continuous(limits = c(0, 600)) +
       #coord_cartesian(xlim = c(0, 600)) +
+      scale_color_manual(name='strat', values=myColors, drop=F) +
+      scale_fill_manual(name='strat', values=myColors, drop=F) +
       theme_bw() + theme(legend.title=element_blank())
     #if(y_column_name == 'Aligned') {
     #    pl + coord_cartesian(ylim=c(96.9, 97.05), xlim = c(0, 600))
@@ -440,10 +460,12 @@ plot_fig4 <- function(m, groups=list('series', 'blowup'), x_column_name='Pct', h
       #geom_text_repel(data=full_pct, aes(x=x, y=y, label='100%')) +
       labs(x='% reads incorrect', y='% reads correct') +
       coord_cartesian(ylim=c(93.5,93.65), xlim = c(5.37, 5.46)) +
+      scale_color_manual(name='strat', values=myColors, drop=F) +
+      scale_fill_manual(name='strat', values=myColors, drop=F) +
       theme_bw() + theme(legend.title=element_blank())
   }
   
-  parametric_helper2 <- function(m) {
+  parametric_helper2 <- function(m, zoom=F) {
     #m$series <- factor(up$series, levels=c("Population coverage", "Hybrid", "Individual"))
     m$horizontal <- m[[x_column_name]]
     
@@ -456,7 +478,11 @@ plot_fig4 <- function(m, groups=list('series', 'blowup'), x_column_name='Pct', h
     m$Num <- as.numeric(m$Num)
     m$horizontal <- m[[x_column_name]]
     m <- m %>% arrange(horizontal)
-    ggplot(m) +
+    #zero_pct <- data.frame(x=c(m$incorrect), y=c(m$Overall))
+    #full_pct <- data.frame(x=c(m$incorrect), y=c(m$Overall))
+    zero_pct <- filter(m, (series == 'Hybrid' && Pct == 0))
+    full_pct <- filter(m, (series == 'Hybrid' && Pct == 100))
+    pl <- ggplot(m) +
       geom_path(aes(x=incorrect, y=Overall, color=get(groups[[1]]), linetype=get(groups[[2]]))) +
       # optimal points
       geom_point(data=mg, aes(x=x, y=y, fill=get(groups[[1]])),
@@ -470,18 +496,28 @@ plot_fig4 <- function(m, groups=list('series', 'blowup'), x_column_name='Pct', h
       #                segment.color='black', point.padding=0.7,
       #                min.segment.length = unit(0, 'lines')) +
       labs(x='% reads incorrect', y='% reads correct') +
-      coord_cartesian(ylim=c(93.5,93.65), xlim = c(5.37, 5.46)) +
+      scale_color_manual(name='strat', values=myColors, drop=F) +
+      scale_fill_manual(name='strat', values=myColors, drop=F) +
       theme_bw() + theme(legend.title=element_blank())
+    
+    if (zoom) {
+      pl + coord_cartesian(ylim=c(93.5,93.65), xlim = c(5.37, 5.46))
+    }
+    else {
+      pl +
+      # 0 and 100% points
+      geom_point(data=rbind(zero_pct, full_pct), aes(x=incorrect, y=Overall), shape=16, fill='black', color='black', size=3)
+      # labels for 0/100% points
+      #geom_text_repel(data=zero_pct, aes(x=incorrect, y=Overall, label='0%')) +
+      #geom_text_repel(data=full_pct, aes(x=incorrect, y=Overall, label='100%'))
+    }
   }
   
   p_ra <- curve_helper(m, 'Aligned', '% reads aligned')
-  p_ca <- curve_helper(m, 'Correct', '% alignments correct') 
-  p_co <- curve_helper(m, 'Overall', '% reads correct')
-  if(plot_parametric) {
-    p_ci <- parametric_helper2(m)
-  } else {
-    p_ci <- curve_helper_mem(m, 'Pct', '% SNVs')
-  }
+  p_ca <- curve_helper(m, 'Correct', '% alignments correct')
+  p_ci <- parametric_helper2(m, zoom=F)
+  p_ciz <- parametric_helper2(m, zoom=T)
+  
   grid_arrange_shared_legend(show_legend, 1, 1, p_ra, p_ca, p_ci)
 }
 ```
@@ -497,13 +533,13 @@ m <- rbind(read_forge_join('../results/chr9_hisat_popcov.tsv', '../results/chr9_
                       'Hybrid', 'CEU'))
 m$Num <- m$Num / 1000
 
-indiv <- read_forge('../results/chr9_NA12878_ref.tsv', 'Individualized', 'Standard')
+indiv <- read_forge('../results/chr9_NA12878_ref.tsv', 'Personalized', 'Standard')
 indiv$Num <- indiv$Pct
 m <- rbind(m, indiv)
 
 plot_fig4(m, x_column_name='Num', x_label='Thousands of SNVs')
 
-pdf(file='fig4.pdf', onefile=F, width=8, height=3)
+pdf(file='fig4.pdf', onefile=F, width=9, height=4)
 plot_fig4(m, x_column_name='Num', x_label='Thousands of SNVs')
 dev.off()
 ```
@@ -538,7 +574,14 @@ grid_arrange_custom_layout <- function(lay, legend_plot_id, ...) {
 
 ```{r full_genome_sim}
 plot_full_sim <- function(sim, groups=list('series')) {
+  myColors <- brewer.pal(5, "Set1")
+  names(myColors) <- c('Population coverage', 'Hybrid', 'Personalized', 'HISAT2 Auto', 'Major Allele')
+  
   curve_helper <- function(m, x_column_name, x_label, y_column_name, y_label) {
+    m <- m %>% filter(Pct != 'NA12878')
+    m$Pct <- as.numeric(as.character(m$Pct))
+    
+    m$horizontal <- m[[x_column_name]]  # trick so I can use "varticle" bareword below
     m$vertical <- m[[y_column_name]]  # trick so I can use "varticle" bareword below
     # following line construct data frame for just the optimal points
     mg <- m %>% dplyr::group_by_(.dots = groups) %>%
@@ -548,11 +591,13 @@ plot_full_sim <- function(sim, groups=list('series')) {
       geom_line() +
       geom_point(data=mg, aes(x=x, y=y, fill=get(groups[[1]])), shape=23, color='black', size=3, alpha=0.5) +
       labs(x=x_label, y=y_label) +
+      scale_color_manual(name='series', values=myColors, drop=F) +
+      scale_fill_manual(name='series', values=myColors, drop=F) +
       theme_bw() + theme(legend.title=element_blank())
   }
 
   parametric_helper <- function(m, x_column_name) {
-    m <- m %>% filter(Pct != 'Auto' && Pct != 'Major')
+    #m <- m %>% filter(Pct != 'NA12878')
     m$Pct <- as.numeric(m$Pct)
     m$horizontal <- m[[x_column_name]]
     
@@ -574,16 +619,18 @@ plot_full_sim <- function(sim, groups=list('series')) {
       geom_point(data=full_pct, aes(x=incorrect, y=Overall),
                  shape=15, fill='black', color='black', size=3) +
       # labels for optimum points
-      geom_text_repel(data=mg, aes(x=x, y=y, label=paste0(pct, '%'), color=series),
+      geom_text_repel(data=filter(mg, (pct != 'NA12878')), aes(x=x, y=y, label=paste0(pct, '%'), color=series),
                       segment.color='black', point.padding=0.7,
                       min.segment.length = unit(0, 'lines')) +
-      geom_text_repel(data=filter(mg, (pct == 'Auto' || pct == 'Major')), aes(x=x, y=y, label=pct, color=series),
+      geom_text_repel(data=filter(mg, (pct == 'NA12878')), aes(x=x, y=y, label=pct, color=series),
                       segment.color='black', point.padding=0.7,
                       min.segment.length = unit(0, 'lines')) +
       # labels for 0/80% points
       geom_text_repel(data=zero_pct, aes(x=incorrect, y=Overall, label='0%')) +
       geom_text_repel(data=full_pct, aes(x=incorrect, y=Overall, label='80%')) +
       labs(x='% reads incorrect', y='% reads correct') +
+      scale_color_manual(name='series', values=myColors, drop=F) +
+      scale_fill_manual(name='series', values=myColors, drop=F) +
       theme_bw() + theme(legend.title=element_blank())
   }
   
@@ -698,9 +745,11 @@ read_dir  <- function (dir_name, pct) {
 
 ```{r fig5}
 sim <- read_forge('../results/full_genome/popcov_blowup_sim.tsv', 'Population coverage', 'Blowup Avoid')
-#levels(sim$series) <- cbind(levels(sim$series), c("Auto"))
-sim$series <- as.character(sim$series)
-#sim$series <- factor(sim$series, levels=c("Population Coverage", "Auto"))
+
+indiv <- read_forge('../results/full_genome/NA12878_sim.tsv', 'Personalized', 'Standard')
+#indiv$Num <- indiv$Pct
+
+sim <- rbind(sim, indiv)
 
 plot_full_sim(sim)
 pdf(file='fig5.pdf', onefile=F, width=9, height=4)
