@@ -52,12 +52,19 @@ grid_arrange_shared_legend <- function(show_legend, num_rows, legend_plot_id, ..
 }
 ```
 
-
 ```{r read_forge}
 read_forge <- function (fn, series, blowup) {
-  tab <- cbind(read.csv(fn, sep='\t', comment.char='#'), list('series'=series, 'blowup'=blowup))
+  #tab <- cbind(read.csv(fn, sep='\t', comment.char='#'), list('series'=series, 'blowup'=blowup))
+  #tab$incorrect <- tab$Aligned - tab$Overall
+  #tab$cor_minus_incor <- tab$Overall - tab$incorrect
+  
+  tab <- read.csv(fn, sep='\t', comment.char='#')
+  tab <- ddply(tab, .(Pct), summarize, Hap="All", Aligned=mean(Aligned), Correct=mean(Correct), Overall=mean(Overall), AlignMem=mean(AlignMem), BuildMem=mean(BuildMem))
+
+  tab <- cbind(tab, list('series'=series, 'blowup'=blowup))
   tab$incorrect <- tab$Aligned - tab$Overall
   tab$cor_minus_incor <- tab$Overall - tab$incorrect
+  
   tab
 }
 ```
@@ -66,7 +73,9 @@ read_forge <- function (fn, series, blowup) {
 read_forge_join <- function (fn1, fn2, series, blowup) {
   tab1 <- read.csv(fn1, sep='\t', comment.char='#')
   tab2 <- read.csv(fn2, sep='\t', comment.char='#')
-  tab <- cbind(dplyr::inner_join(tab1, tab2, by='Pct'), list('series'=series, 'blowup'=blowup))
+  tab <- dplyr::inner_join(tab1, tab2, by='Pct')
+  tab <- ddply(tab, .(Pct, Num), summarize, Hap="All", Aligned=mean(Aligned), Correct=mean(Correct), Overall=mean(Overall), AlignMem=mean(AlignMem), BuildMem=mean(BuildMem))
+  tab <- cbind(tab, list('series'=series, 'blowup'=blowup))
   tab$incorrect <- tab$Aligned - tab$Overall
   tab$cor_minus_incor <- tab$Overall - tab$incorrect
   tab
@@ -76,7 +85,7 @@ read_forge_join <- function (fn1, fn2, series, blowup) {
 ## Fig 1
 
 ```{r chr9_hisat}
-plot_fig1 <- function(m, groups=list('series', 'blowup'), hap='A', show_legend=T) {
+plot_fig1 <- function(m, groups=list('series', 'blowup'), hap='All', show_legend=T) {
   myColors <- brewer.pal(5, "Set1")
   names(myColors) <- c('Population coverage', 'Hybrid', 'Personalized', 'HISAT2 Auto', 'Major Allele')
   
@@ -270,7 +279,7 @@ grid_arrange_multi_legend <- function(num_rows, ...) {
 ```
 
 ```{r chr9_hisat_strat}
-plot_fig_strat <- function(m1, m2, m3, groups=list('series', 'strat'), hap='A', show_legend=T) {
+plot_fig_strat <- function(m1, m2, m3, groups=list('series', 'strat'), hap='All', show_legend=T) {
   myColors <- brewer.pal(5, "Set1")
   names(myColors) <- levels(m1$strat)
   
@@ -356,9 +365,22 @@ plot_fig_strat <- function(m1, m2, m3, groups=list('series', 'strat'), hap='A', 
 }
 ```
 
+```{r read_forge_strat}
+read_forge_strat <- function (fn, strat_mode, series, blowup) {
+  tab <- read.csv(fn, sep='\t', comment.char='#')
+  tab$strat <- tab[[strat_mode]]
+  tab <- ddply(tab, .(Pct, strat), summarize, Hap="All", Aligned=mean(Aligned), Correct=mean(Correct), Overall=mean(Overall), Total=mean(Total))
+  tab <- cbind(tab, list('series'=series, 'blowup'=blowup))
+  tab$incorrect <- tab$Aligned - tab$Overall
+  tab$cor_minus_incor <- tab$Overall - tab$incorrect
+  
+  tab
+}
+```
+
 ```{r fig3}
-m1 <- rbind(read_forge('../results/chr9_hisat_popcov.safe.strat_snp.tsv', 'Population coverage', 'Standard'))
-m1 <- rename(m1, strat=SNPs)
+m1 <- rbind(read_forge_strat('../results/chr9_hisat_popcov.safe.strat_snp.tsv', 'SNPs', 'Population coverage', 'Standard'))
+#m1 <- rename(m1, strat=SNPs)
 m1 <- filter(m1, strat < 4)
 m1$Aligned <- m1$Aligned * 100
 m1$Correct <- m1$Correct * 100
@@ -366,9 +388,8 @@ m1$Overall <- m1$Overall * 100
 m1$incorrect <- m1$incorrect * 100
 m1$strat <- paste0(as.character(m1$strat), " SNVs", '\n', "(n=", m1$Total, ")")
 
-m2 <- rbind(read_forge('../results/chr9_hisat_popcov.safe.strat_rare.tsv', 'Population coverage', 'Standard'))
-#m2 <- rbind(read_forge('../results/strat_all/chr9_all_popcov_safe.strat_rare.tsv', 'Population coverage', 'Standard'))
-m2 <- rename(m2, strat=RareSNPs)
+m2 <- rbind(read_forge_strat('../results/chr9_hisat_popcov.safe.strat_rare.tsv', 'RareSNPs', 'Population coverage', 'Standard'))
+#m2 <- rename(m2, strat=RareSNPs)
 m2$Aligned <- m2$Aligned * 100
 m2$Correct <- m2$Correct * 100
 m2$Overall <- m2$Overall * 100
@@ -377,8 +398,8 @@ m2$strat[m2$strat == 0] <- "1 common SNV"
 m2$strat[m2$strat == 1] <- "1 rare SNV"
 m2$strat <- paste0(m2$strat, '\n', "(n=", m2$Total, ")")
 
-m3 <- rbind(read_forge('../results/chr9_hisat_popcov.safe.strat_region.tsv', 'Population coverage', 'Standard'))
-m3 <- rename(m3, strat=Region)
+m3 <- rbind(read_forge_strat('../results/chr9_hisat_popcov.safe.strat_region.tsv', 'Region', 'Population coverage', 'Standard'))
+#m3 <- rename(m3, strat=Region)
 m3 <- filter(m3, strat != 'NonConf')
 m3$Aligned <- m3$Aligned * 100
 m3$Correct <- m3$Correct * 100
@@ -396,7 +417,7 @@ dev.off()
 ```
 
 ```{r chr19_sim}
-plot_fig4 <- function(m, groups=list('series', 'blowup'), x_column_name='Pct', hap='A', x_label='% SNVs', show_legend=T) {
+plot_fig4 <- function(m, groups=list('series', 'blowup'), x_column_name='Pct', hap='All', x_label='% SNVs', show_legend=T) {
   myColors <- brewer.pal(5, "Set1")
   names(myColors) <- c('Population coverage', 'Hybrid', 'Personalized', 'HISAT2 Auto', 'Major Allele')
   
