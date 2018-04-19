@@ -53,13 +53,18 @@ grid_arrange_shared_legend <- function(show_legend, num_rows, legend_plot_id, ..
 ```
 
 ```{r read_forge}
-read_forge <- function (fn, series, blowup) {
+read_forge <- function (fn, series, blowup, mem=T) {
   #tab <- cbind(read.csv(fn, sep='\t', comment.char='#'), list('series'=series, 'blowup'=blowup))
   #tab$incorrect <- tab$Aligned - tab$Overall
   #tab$cor_minus_incor <- tab$Overall - tab$incorrect
   
   tab <- read.csv(fn, sep='\t', comment.char='#')
-  tab <- ddply(tab, .(Pct), summarize, Hap="All", Aligned=mean(Aligned), Correct=mean(Correct), Overall=mean(Overall), AlignMem=mean(AlignMem), BuildMem=mean(BuildMem))
+  if (mem) {
+    tab <- ddply(tab, .(Pct), summarize, Hap="All", Aligned=mean(Aligned), Correct=mean(Correct), Overall=mean(Overall), AlignMem=mean(AlignMem), BuildMem=mean(BuildMem))
+  }
+  else {
+    tab <- ddply(tab, .(Pct), summarize, Hap="All", Aligned=mean(Aligned), Correct=mean(Correct), Overall=mean(Overall))
+  }
 
   tab <- cbind(tab, list('series'=series, 'blowup'=blowup))
   tab$incorrect <- tab$Aligned - tab$Overall
@@ -657,7 +662,7 @@ plot_full_sim <- function(sim, groups=list('series')) {
   
   sim$horizontal <- sim[['Pct']]  # trick so I can use "varticle" bareword below
   # TODO: add the haplotypes
-  sim <- sim %>% filter(Hap == 'A')
+  sim <- sim %>% filter(Hap == 'All')
   
   p_ra <- curve_helper(sim, 'Pct', '% SNVs', 'Aligned', '% reads aligned')
   p_ca <- curve_helper(sim, 'Pct', '% SNVs', 'Correct', '% alignments correct')
@@ -765,15 +770,18 @@ read_dir  <- function (dir_name, pct) {
 ```
 
 ```{r fig5}
-sim <- read_forge('../results/full_genome/popcov_blowup_sim.tsv', 'Population coverage', 'Blowup Avoid')
+sim <- read_forge('../results/full_genome/popcov_blowup_sim.tsv', 'Population coverage', 'Blowup Avoid', mem=F)
+#sim <- read_forge('../results/chr9_vs_full.tsv', 'Population coverage', 'Blowup Avoid', mem=F)
 
-indiv <- read_forge('../results/full_genome/NA12878_sim.tsv', 'Personalized', 'Standard')
+indiv <- read_forge('../results/full_genome/NA12878_sim.tsv', 'Personalized', 'Standard', mem=F)
+#indiv <- read_forge('../results/chr9_vs_full_NA12878.tsv', 'Personalized', 'Standard', mem=F)
 #indiv$Num <- indiv$Pct
 
 sim <- rbind(sim, indiv)
 
 plot_full_sim(sim)
 pdf(file='fig5.pdf', onefile=F, width=9, height=4)
+#pdf(file='chr9_vs_full.pdf', onefile=F, width=9, height=4)
 plot_full_sim(sim)
 dev.off()
 ```
