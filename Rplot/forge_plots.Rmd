@@ -689,6 +689,10 @@ plot_full_sim <- function(sim, groups=list('series')) {
 
 ```{r full_exp}
 plot_full_exp <- function(up, bias, groups=list('series')) {
+  myColors <- brewer.pal(5, "Set1")
+  names(myColors) <- c('SNVs Only', 'SNVs + Indels', 'HISAT2 Auto')
+  
+  
   unique_perfect <- function(up) {
     up$horizontal <- up[['Pct']]
     #up$series <- factor(up$series, levels=c("Population Coverage", "HISAT2 Auto"))
@@ -707,7 +711,8 @@ plot_full_exp <- function(up, bias, groups=list('series')) {
     
     up <- up %>% arrange(Pct)
     zero_pct <- filter(up, Pct == 0)[1,]
-    full_pct <- filter(up, Pct == 70)
+    full_pct1 <- filter(filter(up, Pct == 70), series == 'SNVs + Indels')
+    full_pct2 <- filter(filter(up, Pct == 80), series == 'SNVs Only')
     #horizontal <- as.character(up$Pct)
     
     ggplot(up) +
@@ -718,16 +723,21 @@ plot_full_exp <- function(up, bias, groups=list('series')) {
       # 0 and 80% points
       geom_point(data=zero_pct, aes(x=Unique, y=Perfect),
                  shape=16, fill='black', color='black', size=3) +
-      geom_point(data=full_pct, aes(x=Unique, y=Perfect),
+      geom_point(data=full_pct1, aes(x=Unique, y=Perfect),
+                 shape=15, fill='black', color='black', size=3) +
+      geom_point(data=full_pct2, aes(x=Unique, y=Perfect),
                  shape=15, fill='black', color='black', size=3) +
       # labels for optimum points
-      geom_text_repel(data=mg, aes(x=x, y=y, label=pct, color=series),
+      geom_text_repel(data=filter(mg, (pct != 'Auto')), aes(x=x, y=y, label=pct, color=series),
                       segment.color='black', point.padding=0.7,
                       min.segment.length = unit(0, 'lines')) +
       # labels for 0/80% points
       geom_text_repel(data=zero_pct, aes(x=Unique, y=Perfect, label='0%')) +
-      geom_text_repel(data=full_pct, aes(x=Unique, y=Perfect, label='70%')) +
+      geom_text_repel(data=full_pct1, aes(x=Unique, y=Perfect, label='70%')) +
+      geom_text_repel(data=full_pct2, aes(x=Unique, y=Perfect, label='80%')) +
       labs(x='Unique Mappings (Billions)', y='Perfect Mappings (Billions)') +
+      scale_color_manual(name='series', values=myColors, drop=F) +
+      scale_fill_manual(name='series', values=myColors, drop=F) +
       theme_bw() + theme(legend.title=element_blank())
   }
   
@@ -808,7 +818,10 @@ up_vars$series = 'SNVs + Indels'
 up_snps <- read_unique_perf('../results/full_genome/unique_perfect_snps.tsv')
 up_snps$series = 'SNVs Only'
 
-up <- rbind(up_vars, up_snps)
+up_auto <- read_unique_perf('../results/full_genome/unique_perfect_hisat_auto.tsv')
+up_auto$series = 'HISAT2 Auto'
+
+up <- rbind(up_vars, up_snps, up_auto)
 #up[which(up$Pct == 'Auto'),]$series = 'HISAT2 Auto'
 
 threshold <- "25"
@@ -825,6 +838,64 @@ for (pct in pcts) {
 plot_full_exp(up, bias)
 pdf(file='fig6.pdf', onefile=F, width=9, height=4)
 plot_full_exp(up, bias)
+dev.off()
+```
+
+```{r chr9_unique_perfect}
+
+up <- read_unique_perf('../results/chr9_unique_perfect_popcov.tsv')
+up$series = 'Population coverage'
+
+myColors <- brewer.pal(5, "Set1")
+names(myColors) <- c('Population coverage', 'Hybrid', 'Personalized', 'HISAT2 Auto', 'Major Allele')
+  
+unique_perfect <- function(up) {
+    up$horizontal <- up[['Pct']]
+    #up$series <- factor(up$series, levels=c("Population Coverage", "HISAT2 Auto"))
+    mg <- up %>% dplyr::group_by(series) %>%
+      dplyr::summarise(y=Perfect[which(u_plus_p == max(u_plus_p))[1]],
+                       x=Unique[which(u_plus_p == max(u_plus_p))[1]],
+                       pct=horizontal[which(u_plus_p == max(u_plus_p))[1]])
+    #up$series <- factor(up$series, levels=c("Population Coverage", "Auto"))
+    
+    #up$series <- factor(up$series, levels=c("Population Coverage"))
+    #mg$pct <- paste0(mg$pct, '%')
+    #mg$pct[mg$pct == 'Auto%'] <- NA
+    
+    up <- up %>% filter(Pct != 'Auto')
+    up$Pct <- as.numeric(as.character(up$Pct))
+    
+    up <- up %>% arrange(Pct)
+    zero_pct <- filter(up, Pct == 0)[1,]
+    full_pct <- filter(up, Pct == 100)
+    #horizontal <- as.character(up$Pct)
+    
+    ggplot(up) +
+      geom_path(aes(x=Unique, y=Perfect, color=series)) +
+      # optimal points
+      geom_point(data=mg, aes(x=x, y=y, fill=series),
+                 shape=23, color='black', size=3, alpha=0.5) +
+      # 0 and 80% points
+      geom_point(data=zero_pct, aes(x=Unique, y=Perfect),
+                 shape=16, fill='black', color='black', size=3) +
+      geom_point(data=full_pct, aes(x=Unique, y=Perfect),
+                 shape=15, fill='black', color='black', size=3) +
+      # labels for optimum points
+      geom_text_repel(data=filter(mg, (pct != 'Auto')), aes(x=x, y=y, label=pct, color=series),
+                      segment.color='black', point.padding=0.7,
+                      min.segment.length = unit(0, 'lines')) +
+      # labels for 0/80% points
+      geom_text_repel(data=zero_pct, aes(x=Unique, y=Perfect, label='0%')) +
+      geom_text_repel(data=full_pct, aes(x=Unique, y=Perfect, label='100%')) +
+      labs(x='Unique Mappings (Billions)', y='Perfect Mappings (Billions)') +
+      scale_color_manual(name='series', values=myColors, drop=F) +
+      scale_fill_manual(name='series', values=myColors, drop=F) +
+      theme_bw() + theme(legend.title=element_blank())
+  }
+
+unique_perfect(up)
+pdf(file='chr9_up.pdf', onefile=F)
+unique_perfect(up)
 dev.off()
 ```
 
