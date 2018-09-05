@@ -90,9 +90,14 @@ read_forge_join <- function (fn1, fn2, series, blowup) {
 ## Fig 1
 
 ```{r chr9_hisat}
-plot_fig1 <- function(m, groups=list('series', 'blowup'), hap='All', show_legend=T) {
-  myColors <- brewer.pal(5, "Set1")
-  names(myColors) <- c('Population coverage', 'Hybrid', 'Personalized', 'HISAT2 Auto', 'Major Allele')
+plot_fig1 <- function(m, groups=list('series', 'blowup'), hap='All', show_legend=T, show_rand=T) {
+  #if (show_rand) {
+    myColors <- brewer.pal(6, "Set1")
+    names(myColors) <- c('Population coverage', 'Hybrid', 'Random', 'Personalized', 'HISAT2 Auto', 'Major Allele')
+  #} else {
+  #  myColors <- brewer.pal(5, "Set1")
+  #  names(myColors) <- c('Population coverage', 'Hybrid', 'Personalized', 'HISAT2 Auto', 'Major Allele')
+  #}
   
   curve_helper <- function(m, x_column_name, x_label, y_column_name, y_label) {
     # Remove HISAT2 Auto lines
@@ -184,7 +189,77 @@ plot_fig1 <- function(m, groups=list('series', 'blowup'), hap='All', show_legend
   p_ca_mem <- curve_helper(m, 'AlignMem', 'Alignment Mem (MB)', 'Correct', '% alignments correct')
   p_mem <- curve_helper_mem(m, 'Pct', '% SNVs', 'AlignMem', 'Alignment Mem (MB)')
   grid_arrange_shared_legend(show_legend, 2, 1, p_ra, p_ca, p_ci, p_ra_mem, p_ca_mem, p_mem)
+  #grid_arrange_shared_legend(show_legend, 1, 1, p_ra, p_ca, p_ci)
 }
+```
+
+
+```{r figpaired}
+m <- rbind(read_forge_join('../results/chr9_hisat_popcov_paired_ind.tsv',
+                           '../results/chr9_hisat_popcov_paired_mem.tsv',
+                           'Population coverage', 'Standard'),
+           read_forge_join('../results/chr9_hisat_popcov_blowup_paired_ind.tsv',
+                           '../results/chr9_hisat_popcov_blowup_paired_mem.tsv',
+                           'Population coverage', 'Blowup avoid'),
+           read_forge_join('../results/chr9_hisat_hybrid_paired_ind.tsv',
+                           '../results/chr9_hisat_hybrid_paired_mem.tsv',
+                           'Hybrid', 'Standard'),
+           read_forge_join('../results/chr9_hisat_hybrid_blowup_paired_ind.tsv',
+                           '../results/chr9_hisat_hybrid_blowup_paired_mem.tsv',
+                           'Hybrid',  'Blowup avoid'))
+
+auto <- read_forge('../results/chr9_hisat_auto_paired_ind.tsv', 'HISAT2 Auto', 'Standard')
+auto$Num <- auto$Pct
+
+major <- read_forge('../results/chr9_major_ref_paired_ind.tsv', 'Major Allele', 'Standard')
+major$Num <- major$Pct
+
+indiv <- read_forge('../results/chr9_NA12878_ref_paired_ind.tsv', 'Personalized', 'Standard')
+indiv$Num <- indiv$Pct
+
+m <- rbind(m, auto, major, indiv)
+
+
+#plot_forge(m, x_column_name='AlignMem', hap='A', x_label='Alignment Mem (MB)', plot_parametric=F)
+plot_fig1(m, show_rand=F)
+
+pdf(file='fig1_paired.pdf', onefile=F, width=9, height=6)
+plot_fig1(m, show_rand=F)
+dev.off()
+```
+
+
+```{r figYRI}
+m <- rbind(read_forge_join('../results/chr9_hisat_popcov_NA19238.tsv',
+                           '../results/chr9_hisat_popcov_NA19238_mem.tsv',
+                           'Population coverage', 'Standard'),
+           read_forge_join('../results/chr9_hisat_popcov_blowup_NA19238.tsv',
+                           '../results/chr9_hisat_popcov_blowup_NA19238_mem.tsv',
+                           'Population coverage', 'Blowup avoid'),
+           read_forge_join('../results/chr9_hisat_hybrid_NA19238.tsv',
+                           '../results/chr9_hisat_hybrid_NA19238_mem.tsv',
+                           'Hybrid', 'Standard'),
+           read_forge_join('../results/chr9_hisat_hybrid_blowup_NA19238.tsv',
+                           '../results/chr9_hisat_hybrid_blowup_NA19238_mem.tsv',
+                           'Hybrid',  'Blowup avoid'))
+
+auto <- read_forge('../results/chr9_NA19238_hisat_auto.tsv', 'HISAT2 Auto', 'Standard')
+auto$Num <- auto$Pct
+
+major <- read_forge('../results/chr9_NA19238_major_ref.tsv', 'Major Allele', 'Standard')
+major$Num <- major$Pct
+
+indiv <- read_forge('../results/chr9_NA19238_ref.tsv', 'Personalized', 'Standard')
+indiv$Num <- indiv$Pct
+
+m <- rbind(m, auto, major, indiv)
+
+#plot_forge(m, x_column_name='AlignMem', hap='A', x_label='Alignment Mem (MB)', plot_parametric=F)
+plot_fig1(m, show_rand=F)
+
+pdf(file='fig1_YRI.pdf', onefile=F, width=9, height=6)
+plot_fig1(m, show_rand=F)
+dev.off()
 ```
 
 ```{r fig1}
@@ -194,12 +269,21 @@ m <- rbind(read_forge_join('../results/chr9_hisat_popcov.tsv',
            read_forge_join('../results/chr9_hisat_popcov_blowup.tsv',
                            '../results/chr9_hisat_popcov_blowup_mem.tsv',
                            'Population coverage', 'Blowup avoid'),
-           read_forge_join('../results/chr9_hisat_amb.tsv',
+           #read_forge_join('../results/chr9_hisat_amb.tsv',
+           #                '../results/chr9_hisat_amb_mem.tsv',
+          #                 'Hybrid', 'Standard'),
+           #read_forge_join('../results/chr9_hisat_amb_blowup.tsv',
+            #               '../results/chr9_hisat_amb_blowup_mem.tsv',
+            #               'Hybrid',  'Blowup avoid'),
+           read_forge_join('../results/chr9_hisat_hybrid.tsv',
                            '../results/chr9_hisat_amb_mem.tsv',
                            'Hybrid', 'Standard'),
-           read_forge_join('../results/chr9_hisat_amb_blowup.tsv',
+           read_forge_join('../results/chr9_hisat_hybrid_blowup.tsv',
                            '../results/chr9_hisat_amb_blowup_mem.tsv',
-                           'Hybrid',  'Blowup avoid'))
+                           'Hybrid',  'Blowup avoid'),
+           read_forge_join('../results/chr9_hisat_rand.tsv',
+                           '../results/chr9_hisat_rand_mem.tsv',
+                           'Random',  'Standard'))
 
 auto <- read_forge('../results/chr9_hisat_auto.tsv', 'HISAT2 Auto', 'Standard')
 auto$Num <- auto$Pct
@@ -215,7 +299,7 @@ m <- rbind(m, auto, major, indiv)
 #plot_forge(m, x_column_name='AlignMem', hap='A', x_label='Alignment Mem (MB)', plot_parametric=F)
 plot_fig1(m)
 
-pdf(file='fig1.pdf', onefile=F, width=9, height=6)
+pdf(file='fig1_new.pdf', onefile=F, width=9, height=6)
 plot_fig1(m)
 dev.off()
 ```
