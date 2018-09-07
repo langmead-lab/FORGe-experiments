@@ -37,6 +37,8 @@ def update_genome(indiv, seq, label, vcf, out_prefix, indels=None, vars_prefix=N
         labels = None
 
         line_id = 0
+        skew_limit = 5
+        cum_skew = 0
 
         offset = 0
         for line in f:
@@ -73,13 +75,17 @@ def update_genome(indiv, seq, label, vcf, out_prefix, indels=None, vars_prefix=N
                             if type == 'INDEL':
                                 origLen = len(orig)
                                 altLen = len(alts[alleleA-1])
+                                diff = origLen - altLen
+                                if abs(cum_skew + diff) > skew_limit:
+                                    continue
+                                cum_skew += diff
                                 if origLen > altLen:
                                     f_indelsA.write(chrom + '\t' + str(loc+altLen) + '\t' + str(altLen-origLen) + '\n')
                                 elif len(alts[alleleA-1]) > 1:
                                     f_indelsA.write(chrom + '\t' + str(loc+origLen) + '\t' + str(altLen-origLen) + '\n')
                                 else:
                                     print(orig)
-                                    print(alts[allelleA-1])
+                                    print(alts[alleleA-1])
                                     exit()
                             offset = add_alt(hapA, loc-1, orig, alts[alleleA-1], offset)
                         else:
@@ -89,13 +95,17 @@ def update_genome(indiv, seq, label, vcf, out_prefix, indels=None, vars_prefix=N
                             if type == 'INDEL':
                                 origLen = len(orig)
                                 altLen = len(alts[alleleB-1])
+                                diff = origLen - altLen
+                                if abs(cum_skew + diff) > skew_limit:
+                                    continue
+                                cum_skew += diff
                                 if origLen > altLen:
                                     f_indelsB.write(chrom + '\t' + str(loc+altLen) + '\t' + str(altLen-origLen) + '\n')
                                 elif len(alts[alleleB-1]) > 1:
                                     f_indelsB.write(chrom + '\t' + str(loc+origLen) + '\t' + str(altLen-origLen) + '\n')
                                 else:
                                     print(orig)
-                                    print(alts[allelleB-1])
+                                    print(alts[alleleB-1])
                                     exit()
                             offset = add_alt(hapB, loc-1, orig, alts[alleleB-1], offset)
                         else:
