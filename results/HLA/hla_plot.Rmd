@@ -1,0 +1,46 @@
+```{r libraries}
+library(ggplot2)
+library(ggrepel)
+library(plyr)
+library(dplyr)
+library(grid)
+library(gridExtra)
+library(cowplot)
+library(RColorBrewer)
+```
+
+```{r read_hla_results}
+read_hla_results  <- function (fn) {
+  tab <- read.csv(fn)
+  myColors <- brewer.pal(3, "Set1")
+  names(myColors) <- c('Called', 'Correctly Called', 'Coverage')
+  # names(myColors) <- c('Recall', 'Precision', 'Coverage')
+  ggplot(tab) +
+    # geom_path(aes(x=SNV,y=Recall, colour="Recall")) +
+    # geom_point(aes(x=SNV,y=Recall, colour="Recall")) +
+    # geom_path(aes(x=SNV,y=Precision, colour="Precision"), linetype = "dashed") +
+    # geom_point(aes(x=SNV,y=Precision, colour="Precision")) + # , shape=18, size=3) +
+    geom_path(aes(x=SNV,y=NumAcc, colour="Correctly Called")) +
+    geom_point(aes(x=SNV,y=NumAcc, colour="Correctly Called")) +
+    geom_path(aes(x=SNV,y=NumCalled, colour="Called"), linetype = "dashed") +
+    geom_point(aes(x=SNV,y=NumCalled, colour="Called")) +
+    geom_path(aes(x=SNV,y=(Coverage-50)*10, colour="Coverage"), linetype = "dotted") +
+    geom_point(aes(x=SNV,y=(Coverage-50)*10, colour="Coverage")) +
+    # labs(x='% SNVs', y='% Alleles') +
+    labs(x='% SNVs', y='# alleles') +
+    scale_y_continuous(sec.axis = sec_axis(~./10+50, name = "Coverage")) + 
+    theme_bw() +
+    theme(legend.position="bottom") +
+    theme(legend.title=element_blank()) +
+    scale_colour_manual(values=myColors)
+}
+```
+```{r hla}
+setwd('/Users/MilksChen/Desktop/HLA')
+f1 <- read_hla_results('/Users/MilksChen/Desktop/HLA/HLA_results.csv')
+f1
+ggsave(file="name.pdf", width=9, height=5)
+# pdf(file='fig_hla.pdf',onefile=F, width=9, height=5)
+read_hla_results('/Users/MilksChen/Desktop/HLA/HLA_results.csv')
+dev.off()
+```
