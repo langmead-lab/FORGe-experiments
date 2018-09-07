@@ -137,4 +137,4 @@ chr1 20 -1""")
     assert -1 == map_array[17]
     assert -1 == map_array[18]
     assert -1 == map_array[19]
-    #assert 0 == map_array[20]
+    assert -1 == map_array[20]
