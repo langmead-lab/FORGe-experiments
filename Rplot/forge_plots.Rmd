@@ -299,7 +299,7 @@ m <- rbind(m, auto, major, indiv)
 #plot_forge(m, x_column_name='AlignMem', hap='A', x_label='Alignment Mem (MB)', plot_parametric=F)
 plot_fig1(m)
 
-pdf(file='fig1_new.pdf', onefile=F, width=9, height=6)
+pdf(file='fig1.pdf', onefile=F, width=9, height=6)
 plot_fig1(m)
 dev.off()
 ```
