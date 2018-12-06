@@ -17,7 +17,7 @@ def get_mutation_type(info):
             return a[3:]
 
 
-def update_genome(indiv, seq, label, vcf, out_prefix, indels=None, vars_prefix=None):
+def update_genome(indiv, seq, label, vcf, out_prefix, indels=None): #, vars_prefix=None):
     hapA = list(seq[:])
     hapB = list(seq[:])
     fA = open(out_prefix + '_hapA.fa', 'w')
@@ -25,9 +25,9 @@ def update_genome(indiv, seq, label, vcf, out_prefix, indels=None, vars_prefix=N
     fB = open(out_prefix + '_hapB.fa', 'w')
     fB.write(label)
 
-    if vars_prefix:
-        f_pA = open(vars_prefix + '_hapA.txt')
-        f_pB = open(vars_prefix + '_hapB.txt')
+#    if vars_prefix:
+#        f_pA = open(vars_prefix + '_hapA.txt')
+#        f_pB = open(vars_prefix + '_hapB.txt')
 
     if indels:
         f_indelsA = open(indels+'A.txt', 'w')
@@ -103,14 +103,14 @@ def update_genome(indiv, seq, label, vcf, out_prefix, indels=None, vars_prefix=N
 
                     line_id += 1
 
-    if vars_prefix:
-        f_pA.close()
-        f_pB.close()
+#    if vars_prefix:
+#        f_pA.close()
+#        f_pB.close()
 
     if indels:
         f_indelsA.close()
         f_indelsB.close()
-        f_vars.close()
+#        f_vars.close()
 
     for i in range(0, len(seq), 60):
         fA.write(''.join(hapA[i:i+60]) + '\n')
